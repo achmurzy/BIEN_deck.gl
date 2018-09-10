@@ -7,6 +7,7 @@ import exampleGeoJSON from './../data/GeoJSON/example/vancouver.json'
 import abiesData from './../data/GeoJSON/Abies_grandis/range.json'
 import DeckGLOverlay from './deckgl-overlay';
 import Charts from './charts';
+import Dropdown from './dropdown'
 
 import {LayerControls, SCATTERPLOT_CONTROLS} from './layer-controls';
 import {tooltipStyle} from './style';
@@ -25,6 +26,8 @@ export default class App extends Component {
     this._resize = this._resize.bind(this);
     this.state = 
     {
+      speciesData: [],
+      occurrenceData: [],
       selectedHour: null,
       viewport: 
       {
@@ -57,71 +60,97 @@ export default class App extends Component {
   }
   componentDidMount()
   {
-    //this._processData();
+    this.fetchSpecies();
+    //this.fetchOccurrences();
     window.addEventListener('resize', this._resize);
     this._resize();
   }
+
+  fetchSpecies()
+  {
+    /*fetch('http://localhost:1337/species/list', {method: 'GET', headers: {"Access-Control-Allow-Origin": "*"}}).then(results => 
+    { 
+      return results.json(); 
+    }).then(data => 
+      {
+        console.log(data);
+        let speciesData = data.rows.map((spp) => {
+          if(spp.species == null)
+          {
+            return null;
+          }
+          else
+          {
+            return { id: spp.id, species: spp.species };
+          }
+        });
+        this.setState({speciesData: speciesData});
+      });*/
+      this.setState({speciesData: [
+      {
+          id: 0,
+          title: 'New York',
+          selected: false,
+          key: 'location'
+      },
+      {
+        id: 1,
+        title: 'Dublin',
+        selected: false,
+        key: 'location'
+      },
+      {
+        id: 2,
+        title: 'California',
+        selected: false,
+        key: 'location'
+      },
+      {
+        id: 3,
+        title: 'Istanbul',
+        selected: false,
+        key: 'location'
+      },
+      {
+        id: 4,
+        title: 'Izmir',
+        selected: false,
+        key: 'location'
+      },
+      {
+        id: 5,
+        title: 'Oslo',
+        selected: false,
+        key: 'location'
+      }
+    ]});
+  }  
+
+  fetchOccurrences()
+  {
+    fetch('http://localhost:1337/occurrence/list', {method: 'GET', headers: {"Access-Control-Allow-Origin": "*"}}).then(results => 
+    { 
+      return results.json(); 
+    }).then(data => 
+      {
+        console.log(data);
+        let occurrenceData = data.rows.map((occurrence) => {
+          if(occurrence.latitude == null || occurrence.longitude == null)
+          {
+            return { latitude: null, longitude: null }
+          }
+          else
+          {
+            return { latitude: parseFloat(occurrence.latitude), longitude: parseFloat(occurrence.longitude) }
+          }
+        });
+        this.setState({occurrenceData: occurrenceData});
+      });
+  }
+
   componentWillUnmount()
   {
     window.removeEventListener('resize', this._resize);
-  }
-
-  _processData()
-  {
-    if(abiesData)
-    {}
-    else if (taxiData) {
-      this.setState({status: 'LOADED'});
-      const data = taxiData.reduce((accu, curr) => {
-
-        const pickupHour = new Date(curr.pickup_datetime).getUTCHours();
-        const dropoffHour = new Date(curr.dropoff_datetime).getUTCHours();
-
-        const pickupLongitude = Number(curr.pickup_longitude);
-        const pickupLatitude = Number(curr.pickup_latitude);
-
-        if (!isNaN(pickupLongitude) && !isNaN(pickupLatitude)) {
-          accu.points.push({
-            position: [pickupLongitude, pickupLatitude],
-            hour: pickupHour,
-            pickup: true
-          });
-        }
-
-        const dropoffLongitude = Number(curr.dropoff_longitude);
-        const dropoffLatitude = Number(curr.dropoff_latitude);
-
-        if (!isNaN(dropoffLongitude) && !isNaN(dropoffLatitude)) {
-          accu.points.push({
-            position: [dropoffLongitude, dropoffLatitude],
-            hour: dropoffHour,
-            pickup: false
-          });
-        }
-
-        const prevPickups = accu.pickupObj[pickupHour] || 0;
-        const prevDropoffs = accu.dropoffObj[dropoffHour] || 0;
-
-        accu.pickupObj[pickupHour] = prevPickups + 1;
-        accu.dropoffObj[dropoffHour] = prevDropoffs + 1;
-
-        return accu;
-      }, {
-        points: [],
-        pickupObj: {},
-        dropoffObj: {}
-      });
-
-      data.pickups = Object.entries(data.pickupObj).map(([hour, count]) => {
-        return {hour: Number(hour), x: Number(hour) + 0.5, y: count};
-      });
-      data.dropoffs = Object.entries(data.dropoffObj).map(([hour, count]) => {
-        return {hour: Number(hour), x: Number(hour) + 0.5, y: count};
-      });
-      data.status = 'READY';
-
-      this.setState(data);
-    }
   }
 
   _resize()
@@ -159,6 +188,8 @@ export default class App extends Component {
           settings={this.state.settings}
           propTypes={SCATTERPLOT_CONTROLS}
           onChange={settings => this._updateLayerSettings(settings)}/>*/}
+        <Dropdown title = "Select species"
+                    list = {this.state.speciesData}/>
         <MapGL
           {...this.state.viewport}
           mapStyle={MAPBOX_STYLE}
@@ -168,7 +199,8 @@ export default class App extends Component {
           <DeckGLOverlay
             //{...this.state.settings}
             viewport={this.state.viewport}
-            data={abiesData}
+            rangeData={abiesData}
+            occurrenceData={this.state.occurrenceData}
             //data={this.state.points}
             //hour={this.state.highlightedHour || this.state.selectedHour}
             //onHover={hover => this._onHover(hover)} //Stores state information from mouse input

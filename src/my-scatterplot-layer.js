@@ -91,25 +91,26 @@ export default class MyScatterplotLayer extends ScatterplotLayer {
 		super.initializeState();
 		//Attributes transfer data from the CPU to the GPU
 		//In this case, we are computing the angle and providing it to the layer as a prop in the layer overlay controller deckgl-overlay.js
-		this.state.attributeManager.addInstanced({
-			instanceAngles: {size:1, accessor: 'getAngle'},
-			instanceTimes: {size:1, accessor: 'getTime'}
-		});
+		//this.state.attributeManager.addInstanced({
+		//	instanceAngles: {size:1, accessor: 'getAngle'},
+		//	instanceTimes: {size:1, accessor: 'getTime'}
+		//});
 	} 
 
 	updateState({props})
 	{
+    console.log(this.props.data)
 		super.updateState(...arguments);
-		this.state.model.setUniforms({ currentTime: props.timeOfDay });
+		//this.state.model.setUniforms({ currentTime: props.timeOfDay });
 	}
 
-	getShaders()
+	/*getShaders()
 	{
-		console.log(super.getShaders().vs);
+		//console.log(super.getShaders().vs);
 		return {
-			...super.getShaders(),
-			vs: vertexShader,
-			fs: fragmentShader
+			//...super.getShaders(),
+			//vs: vertexShader,
+			//fs: fragmentShader
 		};
-	}
+	}*/
 }

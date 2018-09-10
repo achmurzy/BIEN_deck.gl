@@ -57,16 +57,11 @@ export default class DeckGLOverlay extends Component {
   }
 
   render() {
-    if (!this.props.data) {
-      return null;
-    }
-    //const filteredData = this.props.hour === null ?
-    //  this.props.data : this.props.data.filter(d => d.hour === this.props.hour);
 
     const layers = [
-            new RangeLayer({
+            /*new RangeLayer({
         id: 'geojson',
-        data: this.props.data,
+        data: this.props.rangeData,
         opacity: 1.0,
         stroked: true,
         filled: true,
@@ -78,6 +73,13 @@ export default class DeckGLOverlay extends Component {
         getFillColor: [255, 0, 0, 255],
         lightSettings: LIGHT_SETTINGS,
         pickable: true
+        }),*/
+        new ScatterplotLayer({
+          id: 'occurrence-layer',
+          data: this.props.occurrenceData,
+          getPosition: d => [d.longitude, d.latitude],
+          getColor: d => PICKUP_COLOR,
+          getRadius: d => 10000
         }),
       /*new TaxiLayer({
         id: 'taxi-trips',

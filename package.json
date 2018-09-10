@@ -14,7 +14,9 @@
     "luma.gl": "^5.0.1",
     "react": "^15.4.1",
     "react-dom": "^15.4.1",
+    "react-fontawesome": "^1.6.1",
     "react-map-gl": "^3.0.4",
+    "react-onclickoutside": "^6.7.1",
     "react-vis": "^1.7.2",
     "seer": "^0.2.4"
   },
