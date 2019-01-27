@@ -7,7 +7,7 @@
 		exports["ReactMotion"] = factory(require("react"));
 	else
 		root["ReactMotion"] = factory(root["React"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_9__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_10__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -64,19 +64,19 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	exports.Motion = _interopRequire(_Motion);
 	
-	var _StaggeredMotion = __webpack_require__(22);
+	var _StaggeredMotion = __webpack_require__(20);
 	
 	exports.StaggeredMotion = _interopRequire(_StaggeredMotion);
 	
-	var _TransitionMotion = __webpack_require__(23);
+	var _TransitionMotion = __webpack_require__(21);
 	
 	exports.TransitionMotion = _interopRequire(_TransitionMotion);
 	
-	var _spring = __webpack_require__(25);
+	var _spring = __webpack_require__(23);
 	
 	exports.spring = _interopRequire(_spring);
 	
-	var _presets = __webpack_require__(26);
+	var _presets = __webpack_require__(24);
 	
 	exports.presets = _interopRequire(_presets);
 	
@@ -86,7 +86,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	// deprecated, dummy warning function
 	
-	var _reorderKeys = __webpack_require__(27);
+	var _reorderKeys = __webpack_require__(25);
 	
 	exports.reorderKeys = _interopRequire(_reorderKeys);
 
@@ -100,7 +100,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 	
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 	
 	var _mapToZero = __webpack_require__(2);
 	
@@ -122,34 +128,180 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _raf2 = _interopRequireDefault(_raf);
 	
-	var _shouldStopAnimation = __webpack_require__(8);
+	var _shouldStopAnimation = __webpack_require__(9);
 	
 	var _shouldStopAnimation2 = _interopRequireDefault(_shouldStopAnimation);
 	
-	var _react = __webpack_require__(9);
+	var _react = __webpack_require__(10);
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _propTypes = __webpack_require__(10);
+	var _propTypes = __webpack_require__(11);
 	
 	var _propTypes2 = _interopRequireDefault(_propTypes);
 	
-	var _createReactClass = __webpack_require__(18);
-	
-	var _createReactClass2 = _interopRequireDefault(_createReactClass);
-	
 	var msPerFrame = 1000 / 60;
 	
-	var Motion = _createReactClass2['default']({
-	  propTypes: {
-	    // TOOD: warn against putting a config in here
-	    defaultStyle: _propTypes2['default'].objectOf(_propTypes2['default'].number),
-	    style: _propTypes2['default'].objectOf(_propTypes2['default'].oneOfType([_propTypes2['default'].number, _propTypes2['default'].object])).isRequired,
-	    children: _propTypes2['default'].func.isRequired,
-	    onRest: _propTypes2['default'].func
-	  },
+	var Motion = (function (_React$Component) {
+	  _inherits(Motion, _React$Component);
 	
-	  getInitialState: function getInitialState() {
+	  _createClass(Motion, null, [{
+	    key: 'propTypes',
+	    value: {
+	      // TOOD: warn against putting a config in here
+	      defaultStyle: _propTypes2['default'].objectOf(_propTypes2['default'].number),
+	      style: _propTypes2['default'].objectOf(_propTypes2['default'].oneOfType([_propTypes2['default'].number, _propTypes2['default'].object])).isRequired,
+	      children: _propTypes2['default'].func.isRequired,
+	      onRest: _propTypes2['default'].func
+	    },
+	    enumerable: true
+	  }]);
+	
+	  function Motion(props) {
+	    var _this = this;
+	
+	    _classCallCheck(this, Motion);
+	
+	    _React$Component.call(this, props);
+	    this.wasAnimating = false;
+	    this.animationID = null;
+	    this.prevTime = 0;
+	    this.accumulatedTime = 0;
+	    this.unreadPropStyle = null;
+	
+	    this.clearUnreadPropStyle = function (destStyle) {
+	      var dirty = false;
+	      var _state = _this.state;
+	      var currentStyle = _state.currentStyle;
+	      var currentVelocity = _state.currentVelocity;
+	      var lastIdealStyle = _state.lastIdealStyle;
+	      var lastIdealVelocity = _state.lastIdealVelocity;
+	
+	      for (var key in destStyle) {
+	        if (!Object.prototype.hasOwnProperty.call(destStyle, key)) {
+	          continue;
+	        }
+	
+	        var styleValue = destStyle[key];
+	        if (typeof styleValue === 'number') {
+	          if (!dirty) {
+	            dirty = true;
+	            currentStyle = _extends({}, currentStyle);
+	            currentVelocity = _extends({}, currentVelocity);
+	            lastIdealStyle = _extends({}, lastIdealStyle);
+	            lastIdealVelocity = _extends({}, lastIdealVelocity);
+	          }
+	
+	          currentStyle[key] = styleValue;
+	          currentVelocity[key] = 0;
+	          lastIdealStyle[key] = styleValue;
+	          lastIdealVelocity[key] = 0;
+	        }
+	      }
+	
+	      if (dirty) {
+	        _this.setState({ currentStyle: currentStyle, currentVelocity: currentVelocity, lastIdealStyle: lastIdealStyle, lastIdealVelocity: lastIdealVelocity });
+	      }
+	    };
+	
+	    this.startAnimationIfNecessary = function () {
+	      // TODO: when config is {a: 10} and dest is {a: 10} do we raf once and
+	      // call cb? No, otherwise accidental parent rerender causes cb trigger
+	      _this.animationID = _raf2['default'](function (timestamp) {
+	        // check if we need to animate in the first place
+	        var propsStyle = _this.props.style;
+	        if (_shouldStopAnimation2['default'](_this.state.currentStyle, propsStyle, _this.state.currentVelocity)) {
+	          if (_this.wasAnimating && _this.props.onRest) {
+	            _this.props.onRest();
+	          }
+	
+	          // no need to cancel animationID here; shouldn't have any in flight
+	          _this.animationID = null;
+	          _this.wasAnimating = false;
+	          _this.accumulatedTime = 0;
+	          return;
+	        }
+	
+	        _this.wasAnimating = true;
+	
+	        var currentTime = timestamp || _performanceNow2['default']();
+	        var timeDelta = currentTime - _this.prevTime;
+	        _this.prevTime = currentTime;
+	        _this.accumulatedTime = _this.accumulatedTime + timeDelta;
+	        // more than 10 frames? prolly switched browser tab. Restart
+	        if (_this.accumulatedTime > msPerFrame * 10) {
+	          _this.accumulatedTime = 0;
+	        }
+	
+	        if (_this.accumulatedTime === 0) {
+	          // no need to cancel animationID here; shouldn't have any in flight
+	          _this.animationID = null;
+	          _this.startAnimationIfNecessary();
+	          return;
+	        }
+	
+	        var currentFrameCompletion = (_this.accumulatedTime - Math.floor(_this.accumulatedTime / msPerFrame) * msPerFrame) / msPerFrame;
+	        var framesToCatchUp = Math.floor(_this.accumulatedTime / msPerFrame);
+	
+	        var newLastIdealStyle = {};
+	        var newLastIdealVelocity = {};
+	        var newCurrentStyle = {};
+	        var newCurrentVelocity = {};
+	
+	        for (var key in propsStyle) {
+	          if (!Object.prototype.hasOwnProperty.call(propsStyle, key)) {
+	            continue;
+	          }
+	
+	          var styleValue = propsStyle[key];
+	          if (typeof styleValue === 'number') {
+	            newCurrentStyle[key] = styleValue;
+	            newCurrentVelocity[key] = 0;
+	            newLastIdealStyle[key] = styleValue;
+	            newLastIdealVelocity[key] = 0;
+	          } else {
+	            var newLastIdealStyleValue = _this.state.lastIdealStyle[key];
+	            var newLastIdealVelocityValue = _this.state.lastIdealVelocity[key];
+	            for (var i = 0; i < framesToCatchUp; i++) {
+	              var _stepper = _stepper4['default'](msPerFrame / 1000, newLastIdealStyleValue, newLastIdealVelocityValue, styleValue.val, styleValue.stiffness, styleValue.damping, styleValue.precision);
+	
+	              newLastIdealStyleValue = _stepper[0];
+	              newLastIdealVelocityValue = _stepper[1];
+	            }
+	
+	            var _stepper2 = _stepper4['default'](msPerFrame / 1000, newLastIdealStyleValue, newLastIdealVelocityValue, styleValue.val, styleValue.stiffness, styleValue.damping, styleValue.precision);
+	
+	            var nextIdealX = _stepper2[0];
+	            var nextIdealV = _stepper2[1];
+	
+	            newCurrentStyle[key] = newLastIdealStyleValue + (nextIdealX - newLastIdealStyleValue) * currentFrameCompletion;
+	            newCurrentVelocity[key] = newLastIdealVelocityValue + (nextIdealV - newLastIdealVelocityValue) * currentFrameCompletion;
+	            newLastIdealStyle[key] = newLastIdealStyleValue;
+	            newLastIdealVelocity[key] = newLastIdealVelocityValue;
+	          }
+	        }
+	
+	        _this.animationID = null;
+	        // the amount we're looped over above
+	        _this.accumulatedTime -= framesToCatchUp * msPerFrame;
+	
+	        _this.setState({
+	          currentStyle: newCurrentStyle,
+	          currentVelocity: newCurrentVelocity,
+	          lastIdealStyle: newLastIdealStyle,
+	          lastIdealVelocity: newLastIdealVelocity
+	        });
+	
+	        _this.unreadPropStyle = null;
+	
+	        _this.startAnimationIfNecessary();
+	      });
+	    };
+	
+	    this.state = this.defaultState();
+	  }
+	
+	  Motion.prototype.defaultState = function defaultState() {
 	    var _props = this.props;
 	    var defaultStyle = _props.defaultStyle;
 	    var style = _props.style;
@@ -162,158 +314,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	      lastIdealStyle: currentStyle,
 	      lastIdealVelocity: currentVelocity
 	    };
-	  },
+	  };
 	
-	  wasAnimating: false,
-	  animationID: null,
-	  prevTime: 0,
-	  accumulatedTime: 0,
 	  // it's possible that currentStyle's value is stale: if props is immediately
 	  // changed from 0 to 400 to spring(0) again, the async currentStyle is still
 	  // at 0 (didn't have time to tick and interpolate even once). If we naively
 	  // compare currentStyle with destVal it'll be 0 === 0 (no animation, stop).
 	  // In reality currentStyle should be 400
-	  unreadPropStyle: null,
-	  // after checking for unreadPropStyle != null, we manually go set the
-	  // non-interpolating values (those that are a number, without a spring
-	  // config)
-	  clearUnreadPropStyle: function clearUnreadPropStyle(destStyle) {
-	    var dirty = false;
-	    var _state = this.state;
-	    var currentStyle = _state.currentStyle;
-	    var currentVelocity = _state.currentVelocity;
-	    var lastIdealStyle = _state.lastIdealStyle;
-	    var lastIdealVelocity = _state.lastIdealVelocity;
 	
-	    for (var key in destStyle) {
-	      if (!Object.prototype.hasOwnProperty.call(destStyle, key)) {
-	        continue;
-	      }
-	
-	      var styleValue = destStyle[key];
-	      if (typeof styleValue === 'number') {
-	        if (!dirty) {
-	          dirty = true;
-	          currentStyle = _extends({}, currentStyle);
-	          currentVelocity = _extends({}, currentVelocity);
-	          lastIdealStyle = _extends({}, lastIdealStyle);
-	          lastIdealVelocity = _extends({}, lastIdealVelocity);
-	        }
-	
-	        currentStyle[key] = styleValue;
-	        currentVelocity[key] = 0;
-	        lastIdealStyle[key] = styleValue;
-	        lastIdealVelocity[key] = 0;
-	      }
-	    }
-	
-	    if (dirty) {
-	      this.setState({ currentStyle: currentStyle, currentVelocity: currentVelocity, lastIdealStyle: lastIdealStyle, lastIdealVelocity: lastIdealVelocity });
-	    }
-	  },
-	
-	  startAnimationIfNecessary: function startAnimationIfNecessary() {
-	    var _this = this;
-	
-	    // TODO: when config is {a: 10} and dest is {a: 10} do we raf once and
-	    // call cb? No, otherwise accidental parent rerender causes cb trigger
-	    this.animationID = _raf2['default'](function (timestamp) {
-	      // check if we need to animate in the first place
-	      var propsStyle = _this.props.style;
-	      if (_shouldStopAnimation2['default'](_this.state.currentStyle, propsStyle, _this.state.currentVelocity)) {
-	        if (_this.wasAnimating && _this.props.onRest) {
-	          _this.props.onRest();
-	        }
-	
-	        // no need to cancel animationID here; shouldn't have any in flight
-	        _this.animationID = null;
-	        _this.wasAnimating = false;
-	        _this.accumulatedTime = 0;
-	        return;
-	      }
-	
-	      _this.wasAnimating = true;
-	
-	      var currentTime = timestamp || _performanceNow2['default']();
-	      var timeDelta = currentTime - _this.prevTime;
-	      _this.prevTime = currentTime;
-	      _this.accumulatedTime = _this.accumulatedTime + timeDelta;
-	      // more than 10 frames? prolly switched browser tab. Restart
-	      if (_this.accumulatedTime > msPerFrame * 10) {
-	        _this.accumulatedTime = 0;
-	      }
-	
-	      if (_this.accumulatedTime === 0) {
-	        // no need to cancel animationID here; shouldn't have any in flight
-	        _this.animationID = null;
-	        _this.startAnimationIfNecessary();
-	        return;
-	      }
-	
-	      var currentFrameCompletion = (_this.accumulatedTime - Math.floor(_this.accumulatedTime / msPerFrame) * msPerFrame) / msPerFrame;
-	      var framesToCatchUp = Math.floor(_this.accumulatedTime / msPerFrame);
-	
-	      var newLastIdealStyle = {};
-	      var newLastIdealVelocity = {};
-	      var newCurrentStyle = {};
-	      var newCurrentVelocity = {};
-	
-	      for (var key in propsStyle) {
-	        if (!Object.prototype.hasOwnProperty.call(propsStyle, key)) {
-	          continue;
-	        }
-	
-	        var styleValue = propsStyle[key];
-	        if (typeof styleValue === 'number') {
-	          newCurrentStyle[key] = styleValue;
-	          newCurrentVelocity[key] = 0;
-	          newLastIdealStyle[key] = styleValue;
-	          newLastIdealVelocity[key] = 0;
-	        } else {
-	          var newLastIdealStyleValue = _this.state.lastIdealStyle[key];
-	          var newLastIdealVelocityValue = _this.state.lastIdealVelocity[key];
-	          for (var i = 0; i < framesToCatchUp; i++) {
-	            var _stepper = _stepper4['default'](msPerFrame / 1000, newLastIdealStyleValue, newLastIdealVelocityValue, styleValue.val, styleValue.stiffness, styleValue.damping, styleValue.precision);
-	
-	            newLastIdealStyleValue = _stepper[0];
-	            newLastIdealVelocityValue = _stepper[1];
-	          }
-	
-	          var _stepper2 = _stepper4['default'](msPerFrame / 1000, newLastIdealStyleValue, newLastIdealVelocityValue, styleValue.val, styleValue.stiffness, styleValue.damping, styleValue.precision);
-	
-	          var nextIdealX = _stepper2[0];
-	          var nextIdealV = _stepper2[1];
-	
-	          newCurrentStyle[key] = newLastIdealStyleValue + (nextIdealX - newLastIdealStyleValue) * currentFrameCompletion;
-	          newCurrentVelocity[key] = newLastIdealVelocityValue + (nextIdealV - newLastIdealVelocityValue) * currentFrameCompletion;
-	          newLastIdealStyle[key] = newLastIdealStyleValue;
-	          newLastIdealVelocity[key] = newLastIdealVelocityValue;
-	        }
-	      }
-	
-	      _this.animationID = null;
-	      // the amount we're looped over above
-	      _this.accumulatedTime -= framesToCatchUp * msPerFrame;
-	
-	      _this.setState({
-	        currentStyle: newCurrentStyle,
-	        currentVelocity: newCurrentVelocity,
-	        lastIdealStyle: newLastIdealStyle,
-	        lastIdealVelocity: newLastIdealVelocity
-	      });
-	
-	      _this.unreadPropStyle = null;
-	
-	      _this.startAnimationIfNecessary();
-	    });
-	  },
-	
-	  componentDidMount: function componentDidMount() {
+	  Motion.prototype.componentDidMount = function componentDidMount() {
 	    this.prevTime = _performanceNow2['default']();
 	    this.startAnimationIfNecessary();
-	  },
+	  };
 	
-	  componentWillReceiveProps: function componentWillReceiveProps(props) {
+	  Motion.prototype.componentWillReceiveProps = function componentWillReceiveProps(props) {
 	    if (this.unreadPropStyle != null) {
 	      // previous props haven't had the chance to be set yet; set them here
 	      this.clearUnreadPropStyle(this.unreadPropStyle);
@@ -324,23 +338,29 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this.prevTime = _performanceNow2['default']();
 	      this.startAnimationIfNecessary();
 	    }
-	  },
+	  };
 	
-	  componentWillUnmount: function componentWillUnmount() {
+	  Motion.prototype.componentWillUnmount = function componentWillUnmount() {
 	    if (this.animationID != null) {
 	      _raf2['default'].cancel(this.animationID);
 	      this.animationID = null;
 	    }
-	  },
+	  };
 	
-	  render: function render() {
+	  Motion.prototype.render = function render() {
 	    var renderedChildren = this.props.children(this.state.currentStyle);
 	    return renderedChildren && _react2['default'].Children.only(renderedChildren);
-	  }
-	});
+	  };
+	
+	  return Motion;
+	})(_react2['default'].Component);
 	
 	exports['default'] = Motion;
 	module.exports = exports['default'];
+
+	// after checking for unreadPropStyle != null, we manually go set the
+	// non-interpolating values (those that are a number, without a spring
+	// config)
 
 /***/ }),
 /* 2 */
@@ -650,6 +670,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	process.removeListener = noop;
 	process.removeAllListeners = noop;
 	process.emit = noop;
+	process.prependListener = noop;
+	process.prependOnceListener = noop;
+	
+	process.listeners = function (name) {
+	    return [];
+	};
 	
 	process.binding = function (name) {
 	    throw new Error('process.binding is not supported');
@@ -671,7 +697,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	/* WEBPACK VAR INJECTION */(function(global) {'use strict';
 	
-	var now = __webpack_require__(5),
+	var now = __webpack_require__(8),
 	    root = typeof window === 'undefined' ? global : window,
 	    vendors = ['moz', 'webkit'],
 	    suffix = 'AnimationFrame',
@@ -740,14 +766,60 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports.cancel = function () {
 	  caf.apply(root, arguments);
 	};
-	module.exports.polyfill = function () {
-	  root.requestAnimationFrame = raf;
-	  root.cancelAnimationFrame = caf;
+	module.exports.polyfill = function (object) {
+	  if (!object) {
+	    object = root;
+	  }
+	  object.requestAnimationFrame = raf;
+	  object.cancelAnimationFrame = caf;
 	};
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ }),
 /* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process) {// Generated by CoffeeScript 1.12.2
+	"use strict";
+	
+	(function () {
+	  var getNanoSeconds, hrtime, loadTime, moduleLoadTime, nodeLoadTime, upTime;
+	
+	  if (typeof performance !== "undefined" && performance !== null && performance.now) {
+	    module.exports = function () {
+	      return performance.now();
+	    };
+	  } else if (typeof process !== "undefined" && process !== null && process.hrtime) {
+	    module.exports = function () {
+	      return (getNanoSeconds() - nodeLoadTime) / 1e6;
+	    };
+	    hrtime = process.hrtime;
+	    getNanoSeconds = function () {
+	      var hr;
+	      hr = hrtime();
+	      return hr[0] * 1e9 + hr[1];
+	    };
+	    moduleLoadTime = getNanoSeconds();
+	    upTime = process.uptime() * 1e9;
+	    nodeLoadTime = moduleLoadTime - upTime;
+	  } else if (Date.now) {
+	    module.exports = function () {
+	      return Date.now() - loadTime;
+	    };
+	    loadTime = Date.now();
+	  } else {
+	    module.exports = function () {
+	      return new Date().getTime() - loadTime;
+	    };
+	    loadTime = new Date().getTime();
+	  }
+	}).call(undefined);
+	
+	//# sourceMappingURL=performance-now.js.map
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
+
+/***/ }),
+/* 9 */
 /***/ (function(module, exports) {
 
 	
@@ -783,22 +855,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ }),
-/* 9 */
+/* 10 */
 /***/ (function(module, exports) {
 
-	module.exports = __WEBPACK_EXTERNAL_MODULE_9__;
+	module.exports = __WEBPACK_EXTERNAL_MODULE_10__;
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {/**
-	 * Copyright 2013-present, Facebook, Inc.
-	 * All rights reserved.
+	 * Copyright (c) 2013-present, Facebook, Inc.
 	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
+	 * This source code is licensed under the MIT license found in the
+	 * LICENSE file in the root directory of this source tree.
 	 */
 	
 	'use strict';
@@ -813,35 +883,34 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // By explicitly using `prop-types` you are opting into new development behavior.
 	  // http://fb.me/prop-types-in-prod
 	  var throwOnDirectAccess = true;
-	  module.exports = __webpack_require__(11)(isValidElement, throwOnDirectAccess);
+	  module.exports = __webpack_require__(12)(isValidElement, throwOnDirectAccess);
 	} else {
 	  // By explicitly using `prop-types` you are opting into new production behavior.
 	  // http://fb.me/prop-types-in-prod
-	  module.exports = __webpack_require__(17)();
+	  module.exports = __webpack_require__(19)();
 	}
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {/**
-	 * Copyright 2013-present, Facebook, Inc.
-	 * All rights reserved.
+	 * Copyright (c) 2013-present, Facebook, Inc.
 	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
+	 * This source code is licensed under the MIT license found in the
+	 * LICENSE file in the root directory of this source tree.
 	 */
 	
 	'use strict';
 	
-	var emptyFunction = __webpack_require__(12);
-	var invariant = __webpack_require__(13);
-	var warning = __webpack_require__(14);
+	var emptyFunction = __webpack_require__(13);
+	var invariant = __webpack_require__(14);
+	var warning = __webpack_require__(15);
+	var assign = __webpack_require__(16);
 	
-	var ReactPropTypesSecret = __webpack_require__(15);
-	var checkPropTypes = __webpack_require__(16);
+	var ReactPropTypesSecret = __webpack_require__(17);
+	var checkPropTypes = __webpack_require__(18);
 	
 	module.exports = function (isValidElement, throwOnDirectAccess) {
 	  /* global Symbol */
@@ -937,7 +1006,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    objectOf: createObjectOfTypeChecker,
 	    oneOf: createEnumTypeChecker,
 	    oneOfType: createUnionTypeChecker,
-	    shape: createShapeTypeChecker
+	    shape: createShapeTypeChecker,
+	    exact: createStrictShapeTypeChecker
 	  };
 	
 	  /**
@@ -1131,6 +1201,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return emptyFunction.thatReturnsNull;
 	    }
 	
+	    for (var i = 0; i < arrayOfTypeCheckers.length; i++) {
+	      var checker = arrayOfTypeCheckers[i];
+	      if (typeof checker !== 'function') {
+	        warning(false, 'Invalid argument supplied to oneOfType. Expected an array of check functions, but ' + 'received %s at index %s.', getPostfixForTypeWarning(checker), i);
+	        return emptyFunction.thatReturnsNull;
+	      }
+	    }
+	
 	    function validate(props, propName, componentName, location, propFullName) {
 	      for (var i = 0; i < arrayOfTypeCheckers.length; i++) {
 	        var checker = arrayOfTypeCheckers[i];
@@ -1173,6 +1251,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	      return null;
 	    }
+	    return createChainableTypeChecker(validate);
+	  }
+	
+	  function createStrictShapeTypeChecker(shapeTypes) {
+	    function validate(props, propName, componentName, location, propFullName) {
+	      var propValue = props[propName];
+	      var propType = getPropType(propValue);
+	      if (propType !== 'object') {
+	        return new PropTypeError('Invalid ' + location + ' `' + propFullName + '` of type `' + propType + '` ' + ('supplied to `' + componentName + '`, expected `object`.'));
+	      }
+	      // We need to check all keys in case some are required but missing from
+	      // props.
+	      var allKeys = assign({}, props[propName], shapeTypes);
+	      for (var key in allKeys) {
+	        var checker = shapeTypes[key];
+	        if (!checker) {
+	          return new PropTypeError('Invalid ' + location + ' `' + propFullName + '` key `' + key + '` supplied to `' + componentName + '`.' + '\nBad object: ' + JSON.stringify(props[propName], null, '  ') + '\nValid keys: ' + JSON.stringify(Object.keys(shapeTypes), null, '  '));
+	        }
+	        var error = checker(propValue, key, componentName, location, propFullName + '.' + key, ReactPropTypesSecret);
+	        if (error) {
+	          return error;
+	        }
+	      }
+	      return null;
+	    }
+	
 	    return createChainableTypeChecker(validate);
 	  }
 	
@@ -1263,6 +1367,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  // This handles more types than `getPropType`. Only used for error messages.
 	  // See `createPrimitiveTypeChecker`.
 	  function getPreciseType(propValue) {
+	    if (typeof propValue === 'undefined' || propValue === null) {
+	      return '' + propValue;
+	    }
 	    var propType = getPropType(propValue);
 	    if (propType === 'object') {
 	      if (propValue instanceof Date) {
@@ -1272,6 +1379,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 	    }
 	    return propType;
+	  }
+	
+	  // Returns a string that is postfixed to a warning about an invalid type.
+	  // For example, "undefined" or "of type array"
+	  function getPostfixForTypeWarning(value) {
+	    var type = getPreciseType(value);
+	    switch (type) {
+	      case 'array':
+	      case 'object':
+	        return 'an ' + type;
+	      case 'boolean':
+	      case 'date':
+	      case 'regexp':
+	        return 'a ' + type;
+	      default:
+	        return type;
+	    }
 	  }
 	
 	  // Returns class name of the object, if any.
@@ -1290,18 +1414,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ (function(module, exports) {
 
 	"use strict";
 	
 	/**
 	 * Copyright (c) 2013-present, Facebook, Inc.
-	 * All rights reserved.
 	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
+	 * This source code is licensed under the MIT license found in the
+	 * LICENSE file in the root directory of this source tree.
 	 *
 	 * 
 	 */
@@ -1333,16 +1455,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = emptyFunction;
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {/**
 	 * Copyright (c) 2013-present, Facebook, Inc.
-	 * All rights reserved.
 	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
+	 * This source code is licensed under the MIT license found in the
+	 * LICENSE file in the root directory of this source tree.
 	 *
 	 */
 	
@@ -1394,22 +1514,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {/**
-	 * Copyright 2014-2015, Facebook, Inc.
-	 * All rights reserved.
+	 * Copyright (c) 2014-present, Facebook, Inc.
 	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
+	 * This source code is licensed under the MIT license found in the
+	 * LICENSE file in the root directory of this source tree.
 	 *
 	 */
 	
 	'use strict';
 	
-	var emptyFunction = __webpack_require__(12);
+	var emptyFunction = __webpack_require__(13);
 	
 	/**
 	 * Similar to invariant but only logs a warning if the condition is not met.
@@ -1421,945 +1539,50 @@ return /******/ (function(modules) { // webpackBootstrap
 	var warning = emptyFunction;
 	
 	if (process.env.NODE_ENV !== 'production') {
-	  (function () {
-	    var printWarning = function printWarning(format) {
-	      for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-	        args[_key - 1] = arguments[_key];
+	  var printWarning = function printWarning(format) {
+	    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+	      args[_key - 1] = arguments[_key];
+	    }
+	
+	    var argIndex = 0;
+	    var message = 'Warning: ' + format.replace(/%s/g, function () {
+	      return args[argIndex++];
+	    });
+	    if (typeof console !== 'undefined') {
+	      console.error(message);
+	    }
+	    try {
+	      // --- Welcome to debugging React ---
+	      // This error was thrown as a convenience so that you can use this stack
+	      // to find the callsite that caused this warning to fire.
+	      throw new Error(message);
+	    } catch (x) {}
+	  };
+	
+	  warning = function warning(condition, format) {
+	    if (format === undefined) {
+	      throw new Error('`warning(condition, format, ...args)` requires a warning ' + 'message argument');
+	    }
+	
+	    if (format.indexOf('Failed Composite propType: ') === 0) {
+	      return; // Ignore CompositeComponent proptype check.
+	    }
+	
+	    if (!condition) {
+	      for (var _len2 = arguments.length, args = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
+	        args[_key2 - 2] = arguments[_key2];
 	      }
 	
-	      var argIndex = 0;
-	      var message = 'Warning: ' + format.replace(/%s/g, function () {
-	        return args[argIndex++];
-	      });
-	      if (typeof console !== 'undefined') {
-	        console.error(message);
-	      }
-	      try {
-	        // --- Welcome to debugging React ---
-	        // This error was thrown as a convenience so that you can use this stack
-	        // to find the callsite that caused this warning to fire.
-	        throw new Error(message);
-	      } catch (x) {}
-	    };
-	
-	    warning = function warning(condition, format) {
-	      if (format === undefined) {
-	        throw new Error('`warning(condition, format, ...args)` requires a warning ' + 'message argument');
-	      }
-	
-	      if (format.indexOf('Failed Composite propType: ') === 0) {
-	        return; // Ignore CompositeComponent proptype check.
-	      }
-	
-	      if (!condition) {
-	        for (var _len2 = arguments.length, args = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
-	          args[_key2 - 2] = arguments[_key2];
-	        }
-	
-	        printWarning.apply(undefined, [format].concat(args));
-	      }
-	    };
-	  })();
+	      printWarning.apply(undefined, [format].concat(args));
+	    }
+	  };
 	}
 	
 	module.exports = warning;
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
 
 /***/ }),
-/* 15 */
-/***/ (function(module, exports) {
-
-	/**
-	 * Copyright 2013-present, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 */
-	
-	'use strict';
-	
-	var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
-	
-	module.exports = ReactPropTypesSecret;
-
-/***/ }),
 /* 16 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(process) {/**
-	 * Copyright 2013-present, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 */
-	
-	'use strict';
-	
-	if (process.env.NODE_ENV !== 'production') {
-	  var invariant = __webpack_require__(13);
-	  var warning = __webpack_require__(14);
-	  var ReactPropTypesSecret = __webpack_require__(15);
-	  var loggedTypeFailures = {};
-	}
-	
-	/**
-	 * Assert that the values match with the type specs.
-	 * Error messages are memorized and will only be shown once.
-	 *
-	 * @param {object} typeSpecs Map of name to a ReactPropType
-	 * @param {object} values Runtime values that need to be type-checked
-	 * @param {string} location e.g. "prop", "context", "child context"
-	 * @param {string} componentName Name of the component for error messages.
-	 * @param {?Function} getStack Returns the component stack.
-	 * @private
-	 */
-	function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
-	  if (process.env.NODE_ENV !== 'production') {
-	    for (var typeSpecName in typeSpecs) {
-	      if (typeSpecs.hasOwnProperty(typeSpecName)) {
-	        var error;
-	        // Prop type validation may throw. In case they do, we don't want to
-	        // fail the render phase where it didn't fail before. So we log it.
-	        // After these have been cleaned up, we'll let them throw.
-	        try {
-	          // This is intentionally an invariant that gets caught. It's the same
-	          // behavior as without this statement except with a better message.
-	          invariant(typeof typeSpecs[typeSpecName] === 'function', '%s: %s type `%s` is invalid; it must be a function, usually from ' + 'React.PropTypes.', componentName || 'React class', location, typeSpecName);
-	          error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, ReactPropTypesSecret);
-	        } catch (ex) {
-	          error = ex;
-	        }
-	        warning(!error || error instanceof Error, '%s: type specification of %s `%s` is invalid; the type checker ' + 'function must return `null` or an `Error` but returned a %s. ' + 'You may have forgotten to pass an argument to the type checker ' + 'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' + 'shape all require an argument).', componentName || 'React class', location, typeSpecName, typeof error);
-	        if (error instanceof Error && !(error.message in loggedTypeFailures)) {
-	          // Only monitor this failure once because there tends to be a lot of the
-	          // same error.
-	          loggedTypeFailures[error.message] = true;
-	
-	          var stack = getStack ? getStack() : '';
-	
-	          warning(false, 'Failed %s type: %s%s', location, error.message, stack != null ? stack : '');
-	        }
-	      }
-	    }
-	  }
-	}
-	
-	module.exports = checkPropTypes;
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
-
-/***/ }),
-/* 17 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	/**
-	 * Copyright 2013-present, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 */
-	
-	'use strict';
-	
-	var emptyFunction = __webpack_require__(12);
-	var invariant = __webpack_require__(13);
-	
-	module.exports = function () {
-	  // Important!
-	  // Keep this list in sync with production version in `./factoryWithTypeCheckers.js`.
-	  function shim() {
-	    invariant(false, 'Calling PropTypes validators directly is not supported by the `prop-types` package. ' + 'Use PropTypes.checkPropTypes() to call them. ' + 'Read more at http://fb.me/use-check-prop-types');
-	  };
-	  shim.isRequired = shim;
-	  function getShim() {
-	    return shim;
-	  };
-	  var ReactPropTypes = {
-	    array: shim,
-	    bool: shim,
-	    func: shim,
-	    number: shim,
-	    object: shim,
-	    string: shim,
-	    symbol: shim,
-	
-	    any: shim,
-	    arrayOf: getShim,
-	    element: shim,
-	    instanceOf: getShim,
-	    node: shim,
-	    objectOf: getShim,
-	    oneOf: getShim,
-	    oneOfType: getShim,
-	    shape: getShim
-	  };
-	
-	  ReactPropTypes.checkPropTypes = emptyFunction;
-	  ReactPropTypes.PropTypes = ReactPropTypes;
-	
-	  return ReactPropTypes;
-	};
-
-/***/ }),
-/* 18 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	/**
-	 * Copyright 2013-present, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 *
-	 */
-	
-	'use strict';
-	
-	var React = __webpack_require__(9);
-	var factory = __webpack_require__(19);
-	
-	// Hack to grab NoopUpdateQueue from isomorphic React
-	var ReactNoopUpdateQueue = new React.Component().updater;
-	
-	module.exports = factory(React.Component, React.isValidElement, ReactNoopUpdateQueue);
-
-/***/ }),
-/* 19 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	/* WEBPACK VAR INJECTION */(function(process) {/**
-	 * Copyright 2013-present, Facebook, Inc.
-	 * All rights reserved.
-	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 *
-	 */
-	
-	'use strict';
-	
-	var _assign = __webpack_require__(20);
-	
-	var emptyObject = __webpack_require__(21);
-	var _invariant = __webpack_require__(13);
-	
-	if (process.env.NODE_ENV !== 'production') {
-	  var warning = __webpack_require__(14);
-	}
-	
-	var MIXINS_KEY = 'mixins';
-	
-	// Helper function to allow the creation of anonymous functions which do not
-	// have .name set to the name of the variable being assigned to.
-	function identity(fn) {
-	  return fn;
-	}
-	
-	var ReactPropTypeLocationNames;
-	if (process.env.NODE_ENV !== 'production') {
-	  ReactPropTypeLocationNames = {
-	    prop: 'prop',
-	    context: 'context',
-	    childContext: 'child context'
-	  };
-	} else {
-	  ReactPropTypeLocationNames = {};
-	}
-	
-	function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
-	  /**
-	   * Policies that describe methods in `ReactClassInterface`.
-	   */
-	
-	  var injectedMixins = [];
-	
-	  /**
-	   * Composite components are higher-level components that compose other composite
-	   * or host components.
-	   *
-	   * To create a new type of `ReactClass`, pass a specification of
-	   * your new class to `React.createClass`. The only requirement of your class
-	   * specification is that you implement a `render` method.
-	   *
-	   *   var MyComponent = React.createClass({
-	   *     render: function() {
-	   *       return <div>Hello World</div>;
-	   *     }
-	   *   });
-	   *
-	   * The class specification supports a specific protocol of methods that have
-	   * special meaning (e.g. `render`). See `ReactClassInterface` for
-	   * more the comprehensive protocol. Any other properties and methods in the
-	   * class specification will be available on the prototype.
-	   *
-	   * @interface ReactClassInterface
-	   * @internal
-	   */
-	  var ReactClassInterface = {
-	
-	    /**
-	     * An array of Mixin objects to include when defining your component.
-	     *
-	     * @type {array}
-	     * @optional
-	     */
-	    mixins: 'DEFINE_MANY',
-	
-	    /**
-	     * An object containing properties and methods that should be defined on
-	     * the component's constructor instead of its prototype (static methods).
-	     *
-	     * @type {object}
-	     * @optional
-	     */
-	    statics: 'DEFINE_MANY',
-	
-	    /**
-	     * Definition of prop types for this component.
-	     *
-	     * @type {object}
-	     * @optional
-	     */
-	    propTypes: 'DEFINE_MANY',
-	
-	    /**
-	     * Definition of context types for this component.
-	     *
-	     * @type {object}
-	     * @optional
-	     */
-	    contextTypes: 'DEFINE_MANY',
-	
-	    /**
-	     * Definition of context types this component sets for its children.
-	     *
-	     * @type {object}
-	     * @optional
-	     */
-	    childContextTypes: 'DEFINE_MANY',
-	
-	    // ==== Definition methods ====
-	
-	    /**
-	     * Invoked when the component is mounted. Values in the mapping will be set on
-	     * `this.props` if that prop is not specified (i.e. using an `in` check).
-	     *
-	     * This method is invoked before `getInitialState` and therefore cannot rely
-	     * on `this.state` or use `this.setState`.
-	     *
-	     * @return {object}
-	     * @optional
-	     */
-	    getDefaultProps: 'DEFINE_MANY_MERGED',
-	
-	    /**
-	     * Invoked once before the component is mounted. The return value will be used
-	     * as the initial value of `this.state`.
-	     *
-	     *   getInitialState: function() {
-	     *     return {
-	     *       isOn: false,
-	     *       fooBaz: new BazFoo()
-	     *     }
-	     *   }
-	     *
-	     * @return {object}
-	     * @optional
-	     */
-	    getInitialState: 'DEFINE_MANY_MERGED',
-	
-	    /**
-	     * @return {object}
-	     * @optional
-	     */
-	    getChildContext: 'DEFINE_MANY_MERGED',
-	
-	    /**
-	     * Uses props from `this.props` and state from `this.state` to render the
-	     * structure of the component.
-	     *
-	     * No guarantees are made about when or how often this method is invoked, so
-	     * it must not have side effects.
-	     *
-	     *   render: function() {
-	     *     var name = this.props.name;
-	     *     return <div>Hello, {name}!</div>;
-	     *   }
-	     *
-	     * @return {ReactComponent}
-	     * @nosideeffects
-	     * @required
-	     */
-	    render: 'DEFINE_ONCE',
-	
-	    // ==== Delegate methods ====
-	
-	    /**
-	     * Invoked when the component is initially created and about to be mounted.
-	     * This may have side effects, but any external subscriptions or data created
-	     * by this method must be cleaned up in `componentWillUnmount`.
-	     *
-	     * @optional
-	     */
-	    componentWillMount: 'DEFINE_MANY',
-	
-	    /**
-	     * Invoked when the component has been mounted and has a DOM representation.
-	     * However, there is no guarantee that the DOM node is in the document.
-	     *
-	     * Use this as an opportunity to operate on the DOM when the component has
-	     * been mounted (initialized and rendered) for the first time.
-	     *
-	     * @param {DOMElement} rootNode DOM element representing the component.
-	     * @optional
-	     */
-	    componentDidMount: 'DEFINE_MANY',
-	
-	    /**
-	     * Invoked before the component receives new props.
-	     *
-	     * Use this as an opportunity to react to a prop transition by updating the
-	     * state using `this.setState`. Current props are accessed via `this.props`.
-	     *
-	     *   componentWillReceiveProps: function(nextProps, nextContext) {
-	     *     this.setState({
-	     *       likesIncreasing: nextProps.likeCount > this.props.likeCount
-	     *     });
-	     *   }
-	     *
-	     * NOTE: There is no equivalent `componentWillReceiveState`. An incoming prop
-	     * transition may cause a state change, but the opposite is not true. If you
-	     * need it, you are probably looking for `componentWillUpdate`.
-	     *
-	     * @param {object} nextProps
-	     * @optional
-	     */
-	    componentWillReceiveProps: 'DEFINE_MANY',
-	
-	    /**
-	     * Invoked while deciding if the component should be updated as a result of
-	     * receiving new props, state and/or context.
-	     *
-	     * Use this as an opportunity to `return false` when you're certain that the
-	     * transition to the new props/state/context will not require a component
-	     * update.
-	     *
-	     *   shouldComponentUpdate: function(nextProps, nextState, nextContext) {
-	     *     return !equal(nextProps, this.props) ||
-	     *       !equal(nextState, this.state) ||
-	     *       !equal(nextContext, this.context);
-	     *   }
-	     *
-	     * @param {object} nextProps
-	     * @param {?object} nextState
-	     * @param {?object} nextContext
-	     * @return {boolean} True if the component should update.
-	     * @optional
-	     */
-	    shouldComponentUpdate: 'DEFINE_ONCE',
-	
-	    /**
-	     * Invoked when the component is about to update due to a transition from
-	     * `this.props`, `this.state` and `this.context` to `nextProps`, `nextState`
-	     * and `nextContext`.
-	     *
-	     * Use this as an opportunity to perform preparation before an update occurs.
-	     *
-	     * NOTE: You **cannot** use `this.setState()` in this method.
-	     *
-	     * @param {object} nextProps
-	     * @param {?object} nextState
-	     * @param {?object} nextContext
-	     * @param {ReactReconcileTransaction} transaction
-	     * @optional
-	     */
-	    componentWillUpdate: 'DEFINE_MANY',
-	
-	    /**
-	     * Invoked when the component's DOM representation has been updated.
-	     *
-	     * Use this as an opportunity to operate on the DOM when the component has
-	     * been updated.
-	     *
-	     * @param {object} prevProps
-	     * @param {?object} prevState
-	     * @param {?object} prevContext
-	     * @param {DOMElement} rootNode DOM element representing the component.
-	     * @optional
-	     */
-	    componentDidUpdate: 'DEFINE_MANY',
-	
-	    /**
-	     * Invoked when the component is about to be removed from its parent and have
-	     * its DOM representation destroyed.
-	     *
-	     * Use this as an opportunity to deallocate any external resources.
-	     *
-	     * NOTE: There is no `componentDidUnmount` since your component will have been
-	     * destroyed by that point.
-	     *
-	     * @optional
-	     */
-	    componentWillUnmount: 'DEFINE_MANY',
-	
-	    // ==== Advanced methods ====
-	
-	    /**
-	     * Updates the component's currently mounted DOM representation.
-	     *
-	     * By default, this implements React's rendering and reconciliation algorithm.
-	     * Sophisticated clients may wish to override this.
-	     *
-	     * @param {ReactReconcileTransaction} transaction
-	     * @internal
-	     * @overridable
-	     */
-	    updateComponent: 'OVERRIDE_BASE'
-	
-	  };
-	
-	  /**
-	   * Mapping from class specification keys to special processing functions.
-	   *
-	   * Although these are declared like instance properties in the specification
-	   * when defining classes using `React.createClass`, they are actually static
-	   * and are accessible on the constructor instead of the prototype. Despite
-	   * being static, they must be defined outside of the "statics" key under
-	   * which all other static methods are defined.
-	   */
-	  var RESERVED_SPEC_KEYS = {
-	    displayName: function displayName(Constructor, _displayName) {
-	      Constructor.displayName = _displayName;
-	    },
-	    mixins: function mixins(Constructor, _mixins) {
-	      if (_mixins) {
-	        for (var i = 0; i < _mixins.length; i++) {
-	          mixSpecIntoComponent(Constructor, _mixins[i]);
-	        }
-	      }
-	    },
-	    childContextTypes: function childContextTypes(Constructor, _childContextTypes) {
-	      if (process.env.NODE_ENV !== 'production') {
-	        validateTypeDef(Constructor, _childContextTypes, 'childContext');
-	      }
-	      Constructor.childContextTypes = _assign({}, Constructor.childContextTypes, _childContextTypes);
-	    },
-	    contextTypes: function contextTypes(Constructor, _contextTypes) {
-	      if (process.env.NODE_ENV !== 'production') {
-	        validateTypeDef(Constructor, _contextTypes, 'context');
-	      }
-	      Constructor.contextTypes = _assign({}, Constructor.contextTypes, _contextTypes);
-	    },
-	    /**
-	     * Special case getDefaultProps which should move into statics but requires
-	     * automatic merging.
-	     */
-	    getDefaultProps: function getDefaultProps(Constructor, _getDefaultProps) {
-	      if (Constructor.getDefaultProps) {
-	        Constructor.getDefaultProps = createMergedResultFunction(Constructor.getDefaultProps, _getDefaultProps);
-	      } else {
-	        Constructor.getDefaultProps = _getDefaultProps;
-	      }
-	    },
-	    propTypes: function propTypes(Constructor, _propTypes) {
-	      if (process.env.NODE_ENV !== 'production') {
-	        validateTypeDef(Constructor, _propTypes, 'prop');
-	      }
-	      Constructor.propTypes = _assign({}, Constructor.propTypes, _propTypes);
-	    },
-	    statics: function statics(Constructor, _statics) {
-	      mixStaticSpecIntoComponent(Constructor, _statics);
-	    },
-	    autobind: function autobind() {} };
-	
-	  function validateTypeDef(Constructor, typeDef, location) {
-	    for (var propName in typeDef) {
-	      if (typeDef.hasOwnProperty(propName)) {
-	        // use a warning instead of an _invariant so components
-	        // don't show up in prod but only in __DEV__
-	        process.env.NODE_ENV !== 'production' ? warning(typeof typeDef[propName] === 'function', '%s: %s type `%s` is invalid; it must be a function, usually from ' + 'React.PropTypes.', Constructor.displayName || 'ReactClass', ReactPropTypeLocationNames[location], propName) : void 0;
-	      }
-	    }
-	  }
-	
-	  function validateMethodOverride(isAlreadyDefined, name) {
-	    var specPolicy = ReactClassInterface.hasOwnProperty(name) ? ReactClassInterface[name] : null;
-	
-	    // Disallow overriding of base class methods unless explicitly allowed.
-	    if (ReactClassMixin.hasOwnProperty(name)) {
-	      _invariant(specPolicy === 'OVERRIDE_BASE', 'ReactClassInterface: You are attempting to override ' + '`%s` from your class specification. Ensure that your method names ' + 'do not overlap with React methods.', name);
-	    }
-	
-	    // Disallow defining methods more than once unless explicitly allowed.
-	    if (isAlreadyDefined) {
-	      _invariant(specPolicy === 'DEFINE_MANY' || specPolicy === 'DEFINE_MANY_MERGED', 'ReactClassInterface: You are attempting to define ' + '`%s` on your component more than once. This conflict may be due ' + 'to a mixin.', name);
-	    }
-	  }
-	
-	  /**
-	   * Mixin helper which handles policy validation and reserved
-	   * specification keys when building React classes.
-	   */
-	  function mixSpecIntoComponent(Constructor, spec) {
-	    if (!spec) {
-	      if (process.env.NODE_ENV !== 'production') {
-	        var typeofSpec = typeof spec;
-	        var isMixinValid = typeofSpec === 'object' && spec !== null;
-	
-	        process.env.NODE_ENV !== 'production' ? warning(isMixinValid, '%s: You\'re attempting to include a mixin that is either null ' + 'or not an object. Check the mixins included by the component, ' + 'as well as any mixins they include themselves. ' + 'Expected object but got %s.', Constructor.displayName || 'ReactClass', spec === null ? null : typeofSpec) : void 0;
-	      }
-	
-	      return;
-	    }
-	
-	    _invariant(typeof spec !== 'function', 'ReactClass: You\'re attempting to ' + 'use a component class or function as a mixin. Instead, just use a ' + 'regular object.');
-	    _invariant(!isValidElement(spec), 'ReactClass: You\'re attempting to ' + 'use a component as a mixin. Instead, just use a regular object.');
-	
-	    var proto = Constructor.prototype;
-	    var autoBindPairs = proto.__reactAutoBindPairs;
-	
-	    // By handling mixins before any other properties, we ensure the same
-	    // chaining order is applied to methods with DEFINE_MANY policy, whether
-	    // mixins are listed before or after these methods in the spec.
-	    if (spec.hasOwnProperty(MIXINS_KEY)) {
-	      RESERVED_SPEC_KEYS.mixins(Constructor, spec.mixins);
-	    }
-	
-	    for (var name in spec) {
-	      if (!spec.hasOwnProperty(name)) {
-	        continue;
-	      }
-	
-	      if (name === MIXINS_KEY) {
-	        // We have already handled mixins in a special case above.
-	        continue;
-	      }
-	
-	      var property = spec[name];
-	      var isAlreadyDefined = proto.hasOwnProperty(name);
-	      validateMethodOverride(isAlreadyDefined, name);
-	
-	      if (RESERVED_SPEC_KEYS.hasOwnProperty(name)) {
-	        RESERVED_SPEC_KEYS[name](Constructor, property);
-	      } else {
-	        // Setup methods on prototype:
-	        // The following member methods should not be automatically bound:
-	        // 1. Expected ReactClass methods (in the "interface").
-	        // 2. Overridden methods (that were mixed in).
-	        var isReactClassMethod = ReactClassInterface.hasOwnProperty(name);
-	        var isFunction = typeof property === 'function';
-	        var shouldAutoBind = isFunction && !isReactClassMethod && !isAlreadyDefined && spec.autobind !== false;
-	
-	        if (shouldAutoBind) {
-	          autoBindPairs.push(name, property);
-	          proto[name] = property;
-	        } else {
-	          if (isAlreadyDefined) {
-	            var specPolicy = ReactClassInterface[name];
-	
-	            // These cases should already be caught by validateMethodOverride.
-	            _invariant(isReactClassMethod && (specPolicy === 'DEFINE_MANY_MERGED' || specPolicy === 'DEFINE_MANY'), 'ReactClass: Unexpected spec policy %s for key %s ' + 'when mixing in component specs.', specPolicy, name);
-	
-	            // For methods which are defined more than once, call the existing
-	            // methods before calling the new property, merging if appropriate.
-	            if (specPolicy === 'DEFINE_MANY_MERGED') {
-	              proto[name] = createMergedResultFunction(proto[name], property);
-	            } else if (specPolicy === 'DEFINE_MANY') {
-	              proto[name] = createChainedFunction(proto[name], property);
-	            }
-	          } else {
-	            proto[name] = property;
-	            if (process.env.NODE_ENV !== 'production') {
-	              // Add verbose displayName to the function, which helps when looking
-	              // at profiling tools.
-	              if (typeof property === 'function' && spec.displayName) {
-	                proto[name].displayName = spec.displayName + '_' + name;
-	              }
-	            }
-	          }
-	        }
-	      }
-	    }
-	  }
-	
-	  function mixStaticSpecIntoComponent(Constructor, statics) {
-	    if (!statics) {
-	      return;
-	    }
-	    for (var name in statics) {
-	      var property = statics[name];
-	      if (!statics.hasOwnProperty(name)) {
-	        continue;
-	      }
-	
-	      var isReserved = (name in RESERVED_SPEC_KEYS);
-	      _invariant(!isReserved, 'ReactClass: You are attempting to define a reserved ' + 'property, `%s`, that shouldn\'t be on the "statics" key. Define it ' + 'as an instance property instead; it will still be accessible on the ' + 'constructor.', name);
-	
-	      var isInherited = (name in Constructor);
-	      _invariant(!isInherited, 'ReactClass: You are attempting to define ' + '`%s` on your component more than once. This conflict may be ' + 'due to a mixin.', name);
-	      Constructor[name] = property;
-	    }
-	  }
-	
-	  /**
-	   * Merge two objects, but throw if both contain the same key.
-	   *
-	   * @param {object} one The first object, which is mutated.
-	   * @param {object} two The second object
-	   * @return {object} one after it has been mutated to contain everything in two.
-	   */
-	  function mergeIntoWithNoDuplicateKeys(one, two) {
-	    _invariant(one && two && typeof one === 'object' && typeof two === 'object', 'mergeIntoWithNoDuplicateKeys(): Cannot merge non-objects.');
-	
-	    for (var key in two) {
-	      if (two.hasOwnProperty(key)) {
-	        _invariant(one[key] === undefined, 'mergeIntoWithNoDuplicateKeys(): ' + 'Tried to merge two objects with the same key: `%s`. This conflict ' + 'may be due to a mixin; in particular, this may be caused by two ' + 'getInitialState() or getDefaultProps() methods returning objects ' + 'with clashing keys.', key);
-	        one[key] = two[key];
-	      }
-	    }
-	    return one;
-	  }
-	
-	  /**
-	   * Creates a function that invokes two functions and merges their return values.
-	   *
-	   * @param {function} one Function to invoke first.
-	   * @param {function} two Function to invoke second.
-	   * @return {function} Function that invokes the two argument functions.
-	   * @private
-	   */
-	  function createMergedResultFunction(one, two) {
-	    return function mergedResult() {
-	      var a = one.apply(this, arguments);
-	      var b = two.apply(this, arguments);
-	      if (a == null) {
-	        return b;
-	      } else if (b == null) {
-	        return a;
-	      }
-	      var c = {};
-	      mergeIntoWithNoDuplicateKeys(c, a);
-	      mergeIntoWithNoDuplicateKeys(c, b);
-	      return c;
-	    };
-	  }
-	
-	  /**
-	   * Creates a function that invokes two functions and ignores their return vales.
-	   *
-	   * @param {function} one Function to invoke first.
-	   * @param {function} two Function to invoke second.
-	   * @return {function} Function that invokes the two argument functions.
-	   * @private
-	   */
-	  function createChainedFunction(one, two) {
-	    return function chainedFunction() {
-	      one.apply(this, arguments);
-	      two.apply(this, arguments);
-	    };
-	  }
-	
-	  /**
-	   * Binds a method to the component.
-	   *
-	   * @param {object} component Component whose method is going to be bound.
-	   * @param {function} method Method to be bound.
-	   * @return {function} The bound method.
-	   */
-	  function bindAutoBindMethod(component, method) {
-	    var boundMethod = method.bind(component);
-	    if (process.env.NODE_ENV !== 'production') {
-	      boundMethod.__reactBoundContext = component;
-	      boundMethod.__reactBoundMethod = method;
-	      boundMethod.__reactBoundArguments = null;
-	      var componentName = component.constructor.displayName;
-	      var _bind = boundMethod.bind;
-	      boundMethod.bind = function (newThis) {
-	        for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-	          args[_key - 1] = arguments[_key];
-	        }
-	
-	        // User is trying to bind() an autobound method; we effectively will
-	        // ignore the value of "this" that the user is trying to use, so
-	        // let's warn.
-	        if (newThis !== component && newThis !== null) {
-	          process.env.NODE_ENV !== 'production' ? warning(false, 'bind(): React component methods may only be bound to the ' + 'component instance. See %s', componentName) : void 0;
-	        } else if (!args.length) {
-	          process.env.NODE_ENV !== 'production' ? warning(false, 'bind(): You are binding a component method to the component. ' + 'React does this for you automatically in a high-performance ' + 'way, so you can safely remove this call. See %s', componentName) : void 0;
-	          return boundMethod;
-	        }
-	        var reboundMethod = _bind.apply(boundMethod, arguments);
-	        reboundMethod.__reactBoundContext = component;
-	        reboundMethod.__reactBoundMethod = method;
-	        reboundMethod.__reactBoundArguments = args;
-	        return reboundMethod;
-	      };
-	    }
-	    return boundMethod;
-	  }
-	
-	  /**
-	   * Binds all auto-bound methods in a component.
-	   *
-	   * @param {object} component Component whose method is going to be bound.
-	   */
-	  function bindAutoBindMethods(component) {
-	    var pairs = component.__reactAutoBindPairs;
-	    for (var i = 0; i < pairs.length; i += 2) {
-	      var autoBindKey = pairs[i];
-	      var method = pairs[i + 1];
-	      component[autoBindKey] = bindAutoBindMethod(component, method);
-	    }
-	  }
-	
-	  var IsMountedMixin = {
-	    componentDidMount: function componentDidMount() {
-	      this.__isMounted = true;
-	    },
-	    componentWillUnmount: function componentWillUnmount() {
-	      this.__isMounted = false;
-	    }
-	  };
-	
-	  /**
-	   * Add more to the ReactClass base class. These are all legacy features and
-	   * therefore not already part of the modern ReactComponent.
-	   */
-	  var ReactClassMixin = {
-	
-	    /**
-	     * TODO: This will be deprecated because state should always keep a consistent
-	     * type signature and the only use case for this, is to avoid that.
-	     */
-	    replaceState: function replaceState(newState, callback) {
-	      this.updater.enqueueReplaceState(this, newState, callback);
-	    },
-	
-	    /**
-	     * Checks whether or not this composite component is mounted.
-	     * @return {boolean} True if mounted, false otherwise.
-	     * @protected
-	     * @final
-	     */
-	    isMounted: function isMounted() {
-	      if (process.env.NODE_ENV !== 'production') {
-	        process.env.NODE_ENV !== 'production' ? warning(this.__didWarnIsMounted, '%s: isMounted is deprecated. Instead, make sure to clean up ' + 'subscriptions and pending requests in componentWillUnmount to ' + 'prevent memory leaks.', this.constructor && this.constructor.displayName || this.name || 'Component') : void 0;
-	        this.__didWarnIsMounted = true;
-	      }
-	      return !!this.__isMounted;
-	    }
-	  };
-	
-	  var ReactClassComponent = function ReactClassComponent() {};
-	  _assign(ReactClassComponent.prototype, ReactComponent.prototype, ReactClassMixin);
-	
-	  /**
-	   * Creates a composite component class given a class specification.
-	   * See https://facebook.github.io/react/docs/top-level-api.html#react.createclass
-	   *
-	   * @param {object} spec Class specification (which must define `render`).
-	   * @return {function} Component constructor function.
-	   * @public
-	   */
-	  function createClass(spec) {
-	    // To keep our warnings more understandable, we'll use a little hack here to
-	    // ensure that Constructor.name !== 'Constructor'. This makes sure we don't
-	    // unnecessarily identify a class without displayName as 'Constructor'.
-	    var Constructor = identity(function (props, context, updater) {
-	      // This constructor gets overridden by mocks. The argument is used
-	      // by mocks to assert on what gets mounted.
-	
-	      if (process.env.NODE_ENV !== 'production') {
-	        process.env.NODE_ENV !== 'production' ? warning(this instanceof Constructor, 'Something is calling a React component directly. Use a factory or ' + 'JSX instead. See: https://fb.me/react-legacyfactory') : void 0;
-	      }
-	
-	      // Wire up auto-binding
-	      if (this.__reactAutoBindPairs.length) {
-	        bindAutoBindMethods(this);
-	      }
-	
-	      this.props = props;
-	      this.context = context;
-	      this.refs = emptyObject;
-	      this.updater = updater || ReactNoopUpdateQueue;
-	
-	      this.state = null;
-	
-	      // ReactClasses doesn't have constructors. Instead, they use the
-	      // getInitialState and componentWillMount methods for initialization.
-	
-	      var initialState = this.getInitialState ? this.getInitialState() : null;
-	      if (process.env.NODE_ENV !== 'production') {
-	        // We allow auto-mocks to proceed as if they're returning null.
-	        if (initialState === undefined && this.getInitialState._isMockFunction) {
-	          // This is probably bad practice. Consider warning here and
-	          // deprecating this convenience.
-	          initialState = null;
-	        }
-	      }
-	      _invariant(typeof initialState === 'object' && !Array.isArray(initialState), '%s.getInitialState(): must return an object or null', Constructor.displayName || 'ReactCompositeComponent');
-	
-	      this.state = initialState;
-	    });
-	    Constructor.prototype = new ReactClassComponent();
-	    Constructor.prototype.constructor = Constructor;
-	    Constructor.prototype.__reactAutoBindPairs = [];
-	
-	    injectedMixins.forEach(mixSpecIntoComponent.bind(null, Constructor));
-	
-	    mixSpecIntoComponent(Constructor, IsMountedMixin);
-	    mixSpecIntoComponent(Constructor, spec);
-	
-	    // Initialize the defaultProps property after all mixins have been merged.
-	    if (Constructor.getDefaultProps) {
-	      Constructor.defaultProps = Constructor.getDefaultProps();
-	    }
-	
-	    if (process.env.NODE_ENV !== 'production') {
-	      // This is a tag to indicate that the use of these method names is ok,
-	      // since it's used with createClass. If it's not, then it's likely a
-	      // mistake so we'll warn you to use the static property, property
-	      // initializer or constructor respectively.
-	      if (Constructor.getDefaultProps) {
-	        Constructor.getDefaultProps.isReactClassApproved = {};
-	      }
-	      if (Constructor.prototype.getInitialState) {
-	        Constructor.prototype.getInitialState.isReactClassApproved = {};
-	      }
-	    }
-	
-	    _invariant(Constructor.prototype.render, 'createClass(...): Class specification must implement a `render` method.');
-	
-	    if (process.env.NODE_ENV !== 'production') {
-	      process.env.NODE_ENV !== 'production' ? warning(!Constructor.prototype.componentShouldUpdate, '%s has a method called ' + 'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' + 'The name is phrased as a question because the function is ' + 'expected to return a value.', spec.displayName || 'A component') : void 0;
-	      process.env.NODE_ENV !== 'production' ? warning(!Constructor.prototype.componentWillRecieveProps, '%s has a method called ' + 'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?', spec.displayName || 'A component') : void 0;
-	    }
-	
-	    // Reduce time spent doing lookups by setting these on the prototype.
-	    for (var methodName in ReactClassInterface) {
-	      if (!Constructor.prototype[methodName]) {
-	        Constructor.prototype[methodName] = null;
-	      }
-	    }
-	
-	    return Constructor;
-	  }
-	
-	  return createClass;
-	}
-	
-	module.exports = factory;
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
-
-/***/ }),
-/* 20 */
 /***/ (function(module, exports) {
 
 	/*
@@ -2453,32 +1676,147 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ }),
-/* 21 */
-/***/ (function(module, exports, __webpack_require__) {
+/* 17 */
+/***/ (function(module, exports) {
 
-	/* WEBPACK VAR INJECTION */(function(process) {/**
+	/**
 	 * Copyright (c) 2013-present, Facebook, Inc.
-	 * All rights reserved.
 	 *
-	 * This source code is licensed under the BSD-style license found in the
-	 * LICENSE file in the root directory of this source tree. An additional grant
-	 * of patent rights can be found in the PATENTS file in the same directory.
-	 *
+	 * This source code is licensed under the MIT license found in the
+	 * LICENSE file in the root directory of this source tree.
 	 */
 	
 	'use strict';
 	
-	var emptyObject = {};
+	var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
+	
+	module.exports = ReactPropTypesSecret;
+
+/***/ }),
+/* 18 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	/* WEBPACK VAR INJECTION */(function(process) {/**
+	 * Copyright (c) 2013-present, Facebook, Inc.
+	 *
+	 * This source code is licensed under the MIT license found in the
+	 * LICENSE file in the root directory of this source tree.
+	 */
+	
+	'use strict';
 	
 	if (process.env.NODE_ENV !== 'production') {
-	  Object.freeze(emptyObject);
+	  var invariant = __webpack_require__(14);
+	  var warning = __webpack_require__(15);
+	  var ReactPropTypesSecret = __webpack_require__(17);
+	  var loggedTypeFailures = {};
 	}
 	
-	module.exports = emptyObject;
+	/**
+	 * Assert that the values match with the type specs.
+	 * Error messages are memorized and will only be shown once.
+	 *
+	 * @param {object} typeSpecs Map of name to a ReactPropType
+	 * @param {object} values Runtime values that need to be type-checked
+	 * @param {string} location e.g. "prop", "context", "child context"
+	 * @param {string} componentName Name of the component for error messages.
+	 * @param {?Function} getStack Returns the component stack.
+	 * @private
+	 */
+	function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
+	  if (process.env.NODE_ENV !== 'production') {
+	    for (var typeSpecName in typeSpecs) {
+	      if (typeSpecs.hasOwnProperty(typeSpecName)) {
+	        var error;
+	        // Prop type validation may throw. In case they do, we don't want to
+	        // fail the render phase where it didn't fail before. So we log it.
+	        // After these have been cleaned up, we'll let them throw.
+	        try {
+	          // This is intentionally an invariant that gets caught. It's the same
+	          // behavior as without this statement except with a better message.
+	          invariant(typeof typeSpecs[typeSpecName] === 'function', '%s: %s type `%s` is invalid; it must be a function, usually from ' + 'the `prop-types` package, but received `%s`.', componentName || 'React class', location, typeSpecName, typeof typeSpecs[typeSpecName]);
+	          error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, ReactPropTypesSecret);
+	        } catch (ex) {
+	          error = ex;
+	        }
+	        warning(!error || error instanceof Error, '%s: type specification of %s `%s` is invalid; the type checker ' + 'function must return `null` or an `Error` but returned a %s. ' + 'You may have forgotten to pass an argument to the type checker ' + 'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' + 'shape all require an argument).', componentName || 'React class', location, typeSpecName, typeof error);
+	        if (error instanceof Error && !(error.message in loggedTypeFailures)) {
+	          // Only monitor this failure once because there tends to be a lot of the
+	          // same error.
+	          loggedTypeFailures[error.message] = true;
+	
+	          var stack = getStack ? getStack() : '';
+	
+	          warning(false, 'Failed %s type: %s%s', location, error.message, stack != null ? stack : '');
+	        }
+	      }
+	    }
+	  }
+	}
+	
+	module.exports = checkPropTypes;
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
 
 /***/ }),
-/* 22 */
+/* 19 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	/**
+	 * Copyright (c) 2013-present, Facebook, Inc.
+	 *
+	 * This source code is licensed under the MIT license found in the
+	 * LICENSE file in the root directory of this source tree.
+	 */
+	
+	'use strict';
+	
+	var emptyFunction = __webpack_require__(13);
+	var invariant = __webpack_require__(14);
+	var ReactPropTypesSecret = __webpack_require__(17);
+	
+	module.exports = function () {
+	  function shim(props, propName, componentName, location, propFullName, secret) {
+	    if (secret === ReactPropTypesSecret) {
+	      // It is still safe when called from React.
+	      return;
+	    }
+	    invariant(false, 'Calling PropTypes validators directly is not supported by the `prop-types` package. ' + 'Use PropTypes.checkPropTypes() to call them. ' + 'Read more at http://fb.me/use-check-prop-types');
+	  };
+	  shim.isRequired = shim;
+	  function getShim() {
+	    return shim;
+	  };
+	  // Important!
+	  // Keep this list in sync with production version in `./factoryWithTypeCheckers.js`.
+	  var ReactPropTypes = {
+	    array: shim,
+	    bool: shim,
+	    func: shim,
+	    number: shim,
+	    object: shim,
+	    string: shim,
+	    symbol: shim,
+	
+	    any: shim,
+	    arrayOf: getShim,
+	    element: shim,
+	    instanceOf: getShim,
+	    node: shim,
+	    objectOf: getShim,
+	    oneOf: getShim,
+	    oneOfType: getShim,
+	    shape: getShim,
+	    exact: getShim
+	  };
+	
+	  ReactPropTypes.checkPropTypes = emptyFunction;
+	  ReactPropTypes.PropTypes = ReactPropTypes;
+	
+	  return ReactPropTypes;
+	};
+
+/***/ }),
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2487,7 +1825,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 	
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 	
 	var _mapToZero = __webpack_require__(2);
 	
@@ -2509,21 +1853,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _raf2 = _interopRequireDefault(_raf);
 	
-	var _shouldStopAnimation = __webpack_require__(8);
+	var _shouldStopAnimation = __webpack_require__(9);
 	
 	var _shouldStopAnimation2 = _interopRequireDefault(_shouldStopAnimation);
 	
-	var _react = __webpack_require__(9);
+	var _react = __webpack_require__(10);
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _propTypes = __webpack_require__(10);
+	var _propTypes = __webpack_require__(11);
 	
 	var _propTypes2 = _interopRequireDefault(_propTypes);
-	
-	var _createReactClass = __webpack_require__(18);
-	
-	var _createReactClass2 = _interopRequireDefault(_createReactClass);
 	
 	var msPerFrame = 1000 / 60;
 	
@@ -2536,15 +1876,176 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return true;
 	}
 	
-	var StaggeredMotion = _createReactClass2['default']({
-	  propTypes: {
-	    // TOOD: warn against putting a config in here
-	    defaultStyles: _propTypes2['default'].arrayOf(_propTypes2['default'].objectOf(_propTypes2['default'].number)),
-	    styles: _propTypes2['default'].func.isRequired,
-	    children: _propTypes2['default'].func.isRequired
-	  },
+	var StaggeredMotion = (function (_React$Component) {
+	  _inherits(StaggeredMotion, _React$Component);
 	
-	  getInitialState: function getInitialState() {
+	  _createClass(StaggeredMotion, null, [{
+	    key: 'propTypes',
+	    value: {
+	      // TOOD: warn against putting a config in here
+	      defaultStyles: _propTypes2['default'].arrayOf(_propTypes2['default'].objectOf(_propTypes2['default'].number)),
+	      styles: _propTypes2['default'].func.isRequired,
+	      children: _propTypes2['default'].func.isRequired
+	    },
+	    enumerable: true
+	  }]);
+	
+	  function StaggeredMotion(props) {
+	    var _this = this;
+	
+	    _classCallCheck(this, StaggeredMotion);
+	
+	    _React$Component.call(this, props);
+	    this.animationID = null;
+	    this.prevTime = 0;
+	    this.accumulatedTime = 0;
+	    this.unreadPropStyles = null;
+	
+	    this.clearUnreadPropStyle = function (unreadPropStyles) {
+	      var _state = _this.state;
+	      var currentStyles = _state.currentStyles;
+	      var currentVelocities = _state.currentVelocities;
+	      var lastIdealStyles = _state.lastIdealStyles;
+	      var lastIdealVelocities = _state.lastIdealVelocities;
+	
+	      var someDirty = false;
+	      for (var i = 0; i < unreadPropStyles.length; i++) {
+	        var unreadPropStyle = unreadPropStyles[i];
+	        var dirty = false;
+	
+	        for (var key in unreadPropStyle) {
+	          if (!Object.prototype.hasOwnProperty.call(unreadPropStyle, key)) {
+	            continue;
+	          }
+	
+	          var styleValue = unreadPropStyle[key];
+	          if (typeof styleValue === 'number') {
+	            if (!dirty) {
+	              dirty = true;
+	              someDirty = true;
+	              currentStyles[i] = _extends({}, currentStyles[i]);
+	              currentVelocities[i] = _extends({}, currentVelocities[i]);
+	              lastIdealStyles[i] = _extends({}, lastIdealStyles[i]);
+	              lastIdealVelocities[i] = _extends({}, lastIdealVelocities[i]);
+	            }
+	            currentStyles[i][key] = styleValue;
+	            currentVelocities[i][key] = 0;
+	            lastIdealStyles[i][key] = styleValue;
+	            lastIdealVelocities[i][key] = 0;
+	          }
+	        }
+	      }
+	
+	      if (someDirty) {
+	        _this.setState({ currentStyles: currentStyles, currentVelocities: currentVelocities, lastIdealStyles: lastIdealStyles, lastIdealVelocities: lastIdealVelocities });
+	      }
+	    };
+	
+	    this.startAnimationIfNecessary = function () {
+	      // TODO: when config is {a: 10} and dest is {a: 10} do we raf once and
+	      // call cb? No, otherwise accidental parent rerender causes cb trigger
+	      _this.animationID = _raf2['default'](function (timestamp) {
+	        var destStyles = _this.props.styles(_this.state.lastIdealStyles);
+	
+	        // check if we need to animate in the first place
+	        if (shouldStopAnimationAll(_this.state.currentStyles, destStyles, _this.state.currentVelocities)) {
+	          // no need to cancel animationID here; shouldn't have any in flight
+	          _this.animationID = null;
+	          _this.accumulatedTime = 0;
+	          return;
+	        }
+	
+	        var currentTime = timestamp || _performanceNow2['default']();
+	        var timeDelta = currentTime - _this.prevTime;
+	        _this.prevTime = currentTime;
+	        _this.accumulatedTime = _this.accumulatedTime + timeDelta;
+	        // more than 10 frames? prolly switched browser tab. Restart
+	        if (_this.accumulatedTime > msPerFrame * 10) {
+	          _this.accumulatedTime = 0;
+	        }
+	
+	        if (_this.accumulatedTime === 0) {
+	          // no need to cancel animationID here; shouldn't have any in flight
+	          _this.animationID = null;
+	          _this.startAnimationIfNecessary();
+	          return;
+	        }
+	
+	        var currentFrameCompletion = (_this.accumulatedTime - Math.floor(_this.accumulatedTime / msPerFrame) * msPerFrame) / msPerFrame;
+	        var framesToCatchUp = Math.floor(_this.accumulatedTime / msPerFrame);
+	
+	        var newLastIdealStyles = [];
+	        var newLastIdealVelocities = [];
+	        var newCurrentStyles = [];
+	        var newCurrentVelocities = [];
+	
+	        for (var i = 0; i < destStyles.length; i++) {
+	          var destStyle = destStyles[i];
+	          var newCurrentStyle = {};
+	          var newCurrentVelocity = {};
+	          var newLastIdealStyle = {};
+	          var newLastIdealVelocity = {};
+	
+	          for (var key in destStyle) {
+	            if (!Object.prototype.hasOwnProperty.call(destStyle, key)) {
+	              continue;
+	            }
+	
+	            var styleValue = destStyle[key];
+	            if (typeof styleValue === 'number') {
+	              newCurrentStyle[key] = styleValue;
+	              newCurrentVelocity[key] = 0;
+	              newLastIdealStyle[key] = styleValue;
+	              newLastIdealVelocity[key] = 0;
+	            } else {
+	              var newLastIdealStyleValue = _this.state.lastIdealStyles[i][key];
+	              var newLastIdealVelocityValue = _this.state.lastIdealVelocities[i][key];
+	              for (var j = 0; j < framesToCatchUp; j++) {
+	                var _stepper = _stepper4['default'](msPerFrame / 1000, newLastIdealStyleValue, newLastIdealVelocityValue, styleValue.val, styleValue.stiffness, styleValue.damping, styleValue.precision);
+	
+	                newLastIdealStyleValue = _stepper[0];
+	                newLastIdealVelocityValue = _stepper[1];
+	              }
+	
+	              var _stepper2 = _stepper4['default'](msPerFrame / 1000, newLastIdealStyleValue, newLastIdealVelocityValue, styleValue.val, styleValue.stiffness, styleValue.damping, styleValue.precision);
+	
+	              var nextIdealX = _stepper2[0];
+	              var nextIdealV = _stepper2[1];
+	
+	              newCurrentStyle[key] = newLastIdealStyleValue + (nextIdealX - newLastIdealStyleValue) * currentFrameCompletion;
+	              newCurrentVelocity[key] = newLastIdealVelocityValue + (nextIdealV - newLastIdealVelocityValue) * currentFrameCompletion;
+	              newLastIdealStyle[key] = newLastIdealStyleValue;
+	              newLastIdealVelocity[key] = newLastIdealVelocityValue;
+	            }
+	          }
+	
+	          newCurrentStyles[i] = newCurrentStyle;
+	          newCurrentVelocities[i] = newCurrentVelocity;
+	          newLastIdealStyles[i] = newLastIdealStyle;
+	          newLastIdealVelocities[i] = newLastIdealVelocity;
+	        }
+	
+	        _this.animationID = null;
+	        // the amount we're looped over above
+	        _this.accumulatedTime -= framesToCatchUp * msPerFrame;
+	
+	        _this.setState({
+	          currentStyles: newCurrentStyles,
+	          currentVelocities: newCurrentVelocities,
+	          lastIdealStyles: newLastIdealStyles,
+	          lastIdealVelocities: newLastIdealVelocities
+	        });
+	
+	        _this.unreadPropStyles = null;
+	
+	        _this.startAnimationIfNecessary();
+	      });
+	    };
+	
+	    this.state = this.defaultState();
+	  }
+	
+	  StaggeredMotion.prototype.defaultState = function defaultState() {
 	    var _props = this.props;
 	    var defaultStyles = _props.defaultStyles;
 	    var styles = _props.styles;
@@ -2559,169 +2060,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	      lastIdealStyles: currentStyles,
 	      lastIdealVelocities: currentVelocities
 	    };
-	  },
+	  };
 	
-	  animationID: null,
-	  prevTime: 0,
-	  accumulatedTime: 0,
-	  // it's possible that currentStyle's value is stale: if props is immediately
-	  // changed from 0 to 400 to spring(0) again, the async currentStyle is still
-	  // at 0 (didn't have time to tick and interpolate even once). If we naively
-	  // compare currentStyle with destVal it'll be 0 === 0 (no animation, stop).
-	  // In reality currentStyle should be 400
-	  unreadPropStyles: null,
-	  // after checking for unreadPropStyles != null, we manually go set the
-	  // non-interpolating values (those that are a number, without a spring
-	  // config)
-	  clearUnreadPropStyle: function clearUnreadPropStyle(unreadPropStyles) {
-	    var _state = this.state;
-	    var currentStyles = _state.currentStyles;
-	    var currentVelocities = _state.currentVelocities;
-	    var lastIdealStyles = _state.lastIdealStyles;
-	    var lastIdealVelocities = _state.lastIdealVelocities;
-	
-	    var someDirty = false;
-	    for (var i = 0; i < unreadPropStyles.length; i++) {
-	      var unreadPropStyle = unreadPropStyles[i];
-	      var dirty = false;
-	
-	      for (var key in unreadPropStyle) {
-	        if (!Object.prototype.hasOwnProperty.call(unreadPropStyle, key)) {
-	          continue;
-	        }
-	
-	        var styleValue = unreadPropStyle[key];
-	        if (typeof styleValue === 'number') {
-	          if (!dirty) {
-	            dirty = true;
-	            someDirty = true;
-	            currentStyles[i] = _extends({}, currentStyles[i]);
-	            currentVelocities[i] = _extends({}, currentVelocities[i]);
-	            lastIdealStyles[i] = _extends({}, lastIdealStyles[i]);
-	            lastIdealVelocities[i] = _extends({}, lastIdealVelocities[i]);
-	          }
-	          currentStyles[i][key] = styleValue;
-	          currentVelocities[i][key] = 0;
-	          lastIdealStyles[i][key] = styleValue;
-	          lastIdealVelocities[i][key] = 0;
-	        }
-	      }
-	    }
-	
-	    if (someDirty) {
-	      this.setState({ currentStyles: currentStyles, currentVelocities: currentVelocities, lastIdealStyles: lastIdealStyles, lastIdealVelocities: lastIdealVelocities });
-	    }
-	  },
-	
-	  startAnimationIfNecessary: function startAnimationIfNecessary() {
-	    var _this = this;
-	
-	    // TODO: when config is {a: 10} and dest is {a: 10} do we raf once and
-	    // call cb? No, otherwise accidental parent rerender causes cb trigger
-	    this.animationID = _raf2['default'](function (timestamp) {
-	      var destStyles = _this.props.styles(_this.state.lastIdealStyles);
-	
-	      // check if we need to animate in the first place
-	      if (shouldStopAnimationAll(_this.state.currentStyles, destStyles, _this.state.currentVelocities)) {
-	        // no need to cancel animationID here; shouldn't have any in flight
-	        _this.animationID = null;
-	        _this.accumulatedTime = 0;
-	        return;
-	      }
-	
-	      var currentTime = timestamp || _performanceNow2['default']();
-	      var timeDelta = currentTime - _this.prevTime;
-	      _this.prevTime = currentTime;
-	      _this.accumulatedTime = _this.accumulatedTime + timeDelta;
-	      // more than 10 frames? prolly switched browser tab. Restart
-	      if (_this.accumulatedTime > msPerFrame * 10) {
-	        _this.accumulatedTime = 0;
-	      }
-	
-	      if (_this.accumulatedTime === 0) {
-	        // no need to cancel animationID here; shouldn't have any in flight
-	        _this.animationID = null;
-	        _this.startAnimationIfNecessary();
-	        return;
-	      }
-	
-	      var currentFrameCompletion = (_this.accumulatedTime - Math.floor(_this.accumulatedTime / msPerFrame) * msPerFrame) / msPerFrame;
-	      var framesToCatchUp = Math.floor(_this.accumulatedTime / msPerFrame);
-	
-	      var newLastIdealStyles = [];
-	      var newLastIdealVelocities = [];
-	      var newCurrentStyles = [];
-	      var newCurrentVelocities = [];
-	
-	      for (var i = 0; i < destStyles.length; i++) {
-	        var destStyle = destStyles[i];
-	        var newCurrentStyle = {};
-	        var newCurrentVelocity = {};
-	        var newLastIdealStyle = {};
-	        var newLastIdealVelocity = {};
-	
-	        for (var key in destStyle) {
-	          if (!Object.prototype.hasOwnProperty.call(destStyle, key)) {
-	            continue;
-	          }
-	
-	          var styleValue = destStyle[key];
-	          if (typeof styleValue === 'number') {
-	            newCurrentStyle[key] = styleValue;
-	            newCurrentVelocity[key] = 0;
-	            newLastIdealStyle[key] = styleValue;
-	            newLastIdealVelocity[key] = 0;
-	          } else {
-	            var newLastIdealStyleValue = _this.state.lastIdealStyles[i][key];
-	            var newLastIdealVelocityValue = _this.state.lastIdealVelocities[i][key];
-	            for (var j = 0; j < framesToCatchUp; j++) {
-	              var _stepper = _stepper4['default'](msPerFrame / 1000, newLastIdealStyleValue, newLastIdealVelocityValue, styleValue.val, styleValue.stiffness, styleValue.damping, styleValue.precision);
-	
-	              newLastIdealStyleValue = _stepper[0];
-	              newLastIdealVelocityValue = _stepper[1];
-	            }
-	
-	            var _stepper2 = _stepper4['default'](msPerFrame / 1000, newLastIdealStyleValue, newLastIdealVelocityValue, styleValue.val, styleValue.stiffness, styleValue.damping, styleValue.precision);
-	
-	            var nextIdealX = _stepper2[0];
-	            var nextIdealV = _stepper2[1];
-	
-	            newCurrentStyle[key] = newLastIdealStyleValue + (nextIdealX - newLastIdealStyleValue) * currentFrameCompletion;
-	            newCurrentVelocity[key] = newLastIdealVelocityValue + (nextIdealV - newLastIdealVelocityValue) * currentFrameCompletion;
-	            newLastIdealStyle[key] = newLastIdealStyleValue;
-	            newLastIdealVelocity[key] = newLastIdealVelocityValue;
-	          }
-	        }
-	
-	        newCurrentStyles[i] = newCurrentStyle;
-	        newCurrentVelocities[i] = newCurrentVelocity;
-	        newLastIdealStyles[i] = newLastIdealStyle;
-	        newLastIdealVelocities[i] = newLastIdealVelocity;
-	      }
-	
-	      _this.animationID = null;
-	      // the amount we're looped over above
-	      _this.accumulatedTime -= framesToCatchUp * msPerFrame;
-	
-	      _this.setState({
-	        currentStyles: newCurrentStyles,
-	        currentVelocities: newCurrentVelocities,
-	        lastIdealStyles: newLastIdealStyles,
-	        lastIdealVelocities: newLastIdealVelocities
-	      });
-	
-	      _this.unreadPropStyles = null;
-	
-	      _this.startAnimationIfNecessary();
-	    });
-	  },
-	
-	  componentDidMount: function componentDidMount() {
+	  StaggeredMotion.prototype.componentDidMount = function componentDidMount() {
 	    this.prevTime = _performanceNow2['default']();
 	    this.startAnimationIfNecessary();
-	  },
+	  };
 	
-	  componentWillReceiveProps: function componentWillReceiveProps(props) {
+	  StaggeredMotion.prototype.componentWillReceiveProps = function componentWillReceiveProps(props) {
 	    if (this.unreadPropStyles != null) {
 	      // previous props haven't had the chance to be set yet; set them here
 	      this.clearUnreadPropStyle(this.unreadPropStyles);
@@ -2732,26 +2078,38 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this.prevTime = _performanceNow2['default']();
 	      this.startAnimationIfNecessary();
 	    }
-	  },
+	  };
 	
-	  componentWillUnmount: function componentWillUnmount() {
+	  StaggeredMotion.prototype.componentWillUnmount = function componentWillUnmount() {
 	    if (this.animationID != null) {
 	      _raf2['default'].cancel(this.animationID);
 	      this.animationID = null;
 	    }
-	  },
+	  };
 	
-	  render: function render() {
+	  StaggeredMotion.prototype.render = function render() {
 	    var renderedChildren = this.props.children(this.state.currentStyles);
 	    return renderedChildren && _react2['default'].Children.only(renderedChildren);
-	  }
-	});
+	  };
+	
+	  return StaggeredMotion;
+	})(_react2['default'].Component);
 	
 	exports['default'] = StaggeredMotion;
 	module.exports = exports['default'];
 
+	// it's possible that currentStyle's value is stale: if props is immediately
+	// changed from 0 to 400 to spring(0) again, the async currentStyle is still
+	// at 0 (didn't have time to tick and interpolate even once). If we naively
+	// compare currentStyle with destVal it'll be 0 === 0 (no animation, stop).
+	// In reality currentStyle should be 400
+
+	// after checking for unreadPropStyles != null, we manually go set the
+	// non-interpolating values (those that are a number, without a spring
+	// config)
+
 /***/ }),
-/* 23 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2760,7 +2118,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 	
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 	
 	var _mapToZero = __webpack_require__(2);
 	
@@ -2774,7 +2138,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _stepper4 = _interopRequireDefault(_stepper3);
 	
-	var _mergeDiff = __webpack_require__(24);
+	var _mergeDiff = __webpack_require__(22);
 	
 	var _mergeDiff2 = _interopRequireDefault(_mergeDiff);
 	
@@ -2786,21 +2150,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	var _raf2 = _interopRequireDefault(_raf);
 	
-	var _shouldStopAnimation = __webpack_require__(8);
+	var _shouldStopAnimation = __webpack_require__(9);
 	
 	var _shouldStopAnimation2 = _interopRequireDefault(_shouldStopAnimation);
 	
-	var _react = __webpack_require__(9);
+	var _react = __webpack_require__(10);
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _propTypes = __webpack_require__(10);
+	var _propTypes = __webpack_require__(11);
 	
 	var _propTypes2 = _interopRequireDefault(_propTypes);
-	
-	var _createReactClass = __webpack_require__(18);
-	
-	var _createReactClass2 = _interopRequireDefault(_createReactClass);
 	
 	var msPerFrame = 1000 / 60;
 	
@@ -2923,26 +2283,31 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return [newMergedPropsStyles, newCurrentStyles, newCurrentVelocities, newLastIdealStyles, newLastIdealVelocities];
 	}
 	
-	var TransitionMotion = _createReactClass2['default']({
-	  propTypes: {
-	    defaultStyles: _propTypes2['default'].arrayOf(_propTypes2['default'].shape({
-	      key: _propTypes2['default'].string.isRequired,
-	      data: _propTypes2['default'].any,
-	      style: _propTypes2['default'].objectOf(_propTypes2['default'].number).isRequired
-	    })),
-	    styles: _propTypes2['default'].oneOfType([_propTypes2['default'].func, _propTypes2['default'].arrayOf(_propTypes2['default'].shape({
-	      key: _propTypes2['default'].string.isRequired,
-	      data: _propTypes2['default'].any,
-	      style: _propTypes2['default'].objectOf(_propTypes2['default'].oneOfType([_propTypes2['default'].number, _propTypes2['default'].object])).isRequired
-	    }))]).isRequired,
-	    children: _propTypes2['default'].func.isRequired,
-	    willEnter: _propTypes2['default'].func,
-	    willLeave: _propTypes2['default'].func,
-	    didLeave: _propTypes2['default'].func
-	  },
+	var TransitionMotion = (function (_React$Component) {
+	  _inherits(TransitionMotion, _React$Component);
 	
-	  getDefaultProps: function getDefaultProps() {
-	    return {
+	  _createClass(TransitionMotion, null, [{
+	    key: 'propTypes',
+	    value: {
+	      defaultStyles: _propTypes2['default'].arrayOf(_propTypes2['default'].shape({
+	        key: _propTypes2['default'].string.isRequired,
+	        data: _propTypes2['default'].any,
+	        style: _propTypes2['default'].objectOf(_propTypes2['default'].number).isRequired
+	      })),
+	      styles: _propTypes2['default'].oneOfType([_propTypes2['default'].func, _propTypes2['default'].arrayOf(_propTypes2['default'].shape({
+	        key: _propTypes2['default'].string.isRequired,
+	        data: _propTypes2['default'].any,
+	        style: _propTypes2['default'].objectOf(_propTypes2['default'].oneOfType([_propTypes2['default'].number, _propTypes2['default'].object])).isRequired
+	      }))]).isRequired,
+	      children: _propTypes2['default'].func.isRequired,
+	      willEnter: _propTypes2['default'].func,
+	      willLeave: _propTypes2['default'].func,
+	      didLeave: _propTypes2['default'].func
+	    },
+	    enumerable: true
+	  }, {
+	    key: 'defaultProps',
+	    value: {
 	      willEnter: function willEnter(styleThatEntered) {
 	        return _stripStyle2['default'](styleThatEntered.style);
 	      },
@@ -2952,10 +2317,198 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return null;
 	      },
 	      didLeave: function didLeave() {}
-	    };
-	  },
+	    },
+	    enumerable: true
+	  }]);
 	
-	  getInitialState: function getInitialState() {
+	  function TransitionMotion(props) {
+	    var _this = this;
+	
+	    _classCallCheck(this, TransitionMotion);
+	
+	    _React$Component.call(this, props);
+	    this.unmounting = false;
+	    this.animationID = null;
+	    this.prevTime = 0;
+	    this.accumulatedTime = 0;
+	    this.unreadPropStyles = null;
+	
+	    this.clearUnreadPropStyle = function (unreadPropStyles) {
+	      var _mergeAndSync = mergeAndSync(_this.props.willEnter, _this.props.willLeave, _this.props.didLeave, _this.state.mergedPropsStyles, unreadPropStyles, _this.state.currentStyles, _this.state.currentVelocities, _this.state.lastIdealStyles, _this.state.lastIdealVelocities);
+	
+	      var mergedPropsStyles = _mergeAndSync[0];
+	      var currentStyles = _mergeAndSync[1];
+	      var currentVelocities = _mergeAndSync[2];
+	      var lastIdealStyles = _mergeAndSync[3];
+	      var lastIdealVelocities = _mergeAndSync[4];
+	
+	      for (var i = 0; i < unreadPropStyles.length; i++) {
+	        var unreadPropStyle = unreadPropStyles[i].style;
+	        var dirty = false;
+	
+	        for (var key in unreadPropStyle) {
+	          if (!Object.prototype.hasOwnProperty.call(unreadPropStyle, key)) {
+	            continue;
+	          }
+	
+	          var styleValue = unreadPropStyle[key];
+	          if (typeof styleValue === 'number') {
+	            if (!dirty) {
+	              dirty = true;
+	              currentStyles[i] = _extends({}, currentStyles[i]);
+	              currentVelocities[i] = _extends({}, currentVelocities[i]);
+	              lastIdealStyles[i] = _extends({}, lastIdealStyles[i]);
+	              lastIdealVelocities[i] = _extends({}, lastIdealVelocities[i]);
+	              mergedPropsStyles[i] = {
+	                key: mergedPropsStyles[i].key,
+	                data: mergedPropsStyles[i].data,
+	                style: _extends({}, mergedPropsStyles[i].style)
+	              };
+	            }
+	            currentStyles[i][key] = styleValue;
+	            currentVelocities[i][key] = 0;
+	            lastIdealStyles[i][key] = styleValue;
+	            lastIdealVelocities[i][key] = 0;
+	            mergedPropsStyles[i].style[key] = styleValue;
+	          }
+	        }
+	      }
+	
+	      // unlike the other 2 components, we can't detect staleness and optionally
+	      // opt out of setState here. each style object's data might contain new
+	      // stuff we're not/cannot compare
+	      _this.setState({
+	        currentStyles: currentStyles,
+	        currentVelocities: currentVelocities,
+	        mergedPropsStyles: mergedPropsStyles,
+	        lastIdealStyles: lastIdealStyles,
+	        lastIdealVelocities: lastIdealVelocities
+	      });
+	    };
+	
+	    this.startAnimationIfNecessary = function () {
+	      if (_this.unmounting) {
+	        return;
+	      }
+	
+	      // TODO: when config is {a: 10} and dest is {a: 10} do we raf once and
+	      // call cb? No, otherwise accidental parent rerender causes cb trigger
+	      _this.animationID = _raf2['default'](function (timestamp) {
+	        // https://github.com/chenglou/react-motion/pull/420
+	        // > if execution passes the conditional if (this.unmounting), then
+	        // executes async defaultRaf and after that component unmounts and after
+	        // that the callback of defaultRaf is called, then setState will be called
+	        // on unmounted component.
+	        if (_this.unmounting) {
+	          return;
+	        }
+	
+	        var propStyles = _this.props.styles;
+	        var destStyles = typeof propStyles === 'function' ? propStyles(rehydrateStyles(_this.state.mergedPropsStyles, _this.unreadPropStyles, _this.state.lastIdealStyles)) : propStyles;
+	
+	        // check if we need to animate in the first place
+	        if (shouldStopAnimationAll(_this.state.currentStyles, destStyles, _this.state.currentVelocities, _this.state.mergedPropsStyles)) {
+	          // no need to cancel animationID here; shouldn't have any in flight
+	          _this.animationID = null;
+	          _this.accumulatedTime = 0;
+	          return;
+	        }
+	
+	        var currentTime = timestamp || _performanceNow2['default']();
+	        var timeDelta = currentTime - _this.prevTime;
+	        _this.prevTime = currentTime;
+	        _this.accumulatedTime = _this.accumulatedTime + timeDelta;
+	        // more than 10 frames? prolly switched browser tab. Restart
+	        if (_this.accumulatedTime > msPerFrame * 10) {
+	          _this.accumulatedTime = 0;
+	        }
+	
+	        if (_this.accumulatedTime === 0) {
+	          // no need to cancel animationID here; shouldn't have any in flight
+	          _this.animationID = null;
+	          _this.startAnimationIfNecessary();
+	          return;
+	        }
+	
+	        var currentFrameCompletion = (_this.accumulatedTime - Math.floor(_this.accumulatedTime / msPerFrame) * msPerFrame) / msPerFrame;
+	        var framesToCatchUp = Math.floor(_this.accumulatedTime / msPerFrame);
+	
+	        var _mergeAndSync2 = mergeAndSync(_this.props.willEnter, _this.props.willLeave, _this.props.didLeave, _this.state.mergedPropsStyles, destStyles, _this.state.currentStyles, _this.state.currentVelocities, _this.state.lastIdealStyles, _this.state.lastIdealVelocities);
+	
+	        var newMergedPropsStyles = _mergeAndSync2[0];
+	        var newCurrentStyles = _mergeAndSync2[1];
+	        var newCurrentVelocities = _mergeAndSync2[2];
+	        var newLastIdealStyles = _mergeAndSync2[3];
+	        var newLastIdealVelocities = _mergeAndSync2[4];
+	
+	        for (var i = 0; i < newMergedPropsStyles.length; i++) {
+	          var newMergedPropsStyle = newMergedPropsStyles[i].style;
+	          var newCurrentStyle = {};
+	          var newCurrentVelocity = {};
+	          var newLastIdealStyle = {};
+	          var newLastIdealVelocity = {};
+	
+	          for (var key in newMergedPropsStyle) {
+	            if (!Object.prototype.hasOwnProperty.call(newMergedPropsStyle, key)) {
+	              continue;
+	            }
+	
+	            var styleValue = newMergedPropsStyle[key];
+	            if (typeof styleValue === 'number') {
+	              newCurrentStyle[key] = styleValue;
+	              newCurrentVelocity[key] = 0;
+	              newLastIdealStyle[key] = styleValue;
+	              newLastIdealVelocity[key] = 0;
+	            } else {
+	              var newLastIdealStyleValue = newLastIdealStyles[i][key];
+	              var newLastIdealVelocityValue = newLastIdealVelocities[i][key];
+	              for (var j = 0; j < framesToCatchUp; j++) {
+	                var _stepper = _stepper4['default'](msPerFrame / 1000, newLastIdealStyleValue, newLastIdealVelocityValue, styleValue.val, styleValue.stiffness, styleValue.damping, styleValue.precision);
+	
+	                newLastIdealStyleValue = _stepper[0];
+	                newLastIdealVelocityValue = _stepper[1];
+	              }
+	
+	              var _stepper2 = _stepper4['default'](msPerFrame / 1000, newLastIdealStyleValue, newLastIdealVelocityValue, styleValue.val, styleValue.stiffness, styleValue.damping, styleValue.precision);
+	
+	              var nextIdealX = _stepper2[0];
+	              var nextIdealV = _stepper2[1];
+	
+	              newCurrentStyle[key] = newLastIdealStyleValue + (nextIdealX - newLastIdealStyleValue) * currentFrameCompletion;
+	              newCurrentVelocity[key] = newLastIdealVelocityValue + (nextIdealV - newLastIdealVelocityValue) * currentFrameCompletion;
+	              newLastIdealStyle[key] = newLastIdealStyleValue;
+	              newLastIdealVelocity[key] = newLastIdealVelocityValue;
+	            }
+	          }
+	
+	          newLastIdealStyles[i] = newLastIdealStyle;
+	          newLastIdealVelocities[i] = newLastIdealVelocity;
+	          newCurrentStyles[i] = newCurrentStyle;
+	          newCurrentVelocities[i] = newCurrentVelocity;
+	        }
+	
+	        _this.animationID = null;
+	        // the amount we're looped over above
+	        _this.accumulatedTime -= framesToCatchUp * msPerFrame;
+	
+	        _this.setState({
+	          currentStyles: newCurrentStyles,
+	          currentVelocities: newCurrentVelocities,
+	          lastIdealStyles: newLastIdealStyles,
+	          lastIdealVelocities: newLastIdealVelocities,
+	          mergedPropsStyles: newMergedPropsStyles
+	        });
+	
+	        _this.unreadPropStyles = null;
+	
+	        _this.startAnimationIfNecessary();
+	      });
+	    };
+	
+	    this.state = this.defaultState();
+	  }
+	
+	  TransitionMotion.prototype.defaultState = function defaultState() {
 	    var _props = this.props;
 	    var defaultStyles = _props.defaultStyles;
 	    var styles = _props.styles;
@@ -2994,18 +2547,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return _mapToZero2['default'](s.style);
 	    });
 	
-	    var _mergeAndSync = mergeAndSync(
+	    var _mergeAndSync3 = mergeAndSync(
 	    // Because this is an old-style createReactClass component, Flow doesn't
 	    // understand that the willEnter and willLeave props have default values
 	    // and will always be present.
 	    willEnter, willLeave, didLeave, oldMergedPropsStyles, destStyles, oldCurrentStyles, oldCurrentVelocities, oldCurrentStyles, // oldLastIdealStyles really
 	    oldCurrentVelocities);
 	
-	    var mergedPropsStyles = _mergeAndSync[0];
-	    var currentStyles = _mergeAndSync[1];
-	    var currentVelocities = _mergeAndSync[2];
-	    var lastIdealStyles = _mergeAndSync[3];
-	    var lastIdealVelocities = _mergeAndSync[4];
+	    var mergedPropsStyles = _mergeAndSync3[0];
+	    var currentStyles = _mergeAndSync3[1];
+	    var currentVelocities = _mergeAndSync3[2];
+	    var lastIdealStyles = _mergeAndSync3[3];
+	    var lastIdealVelocities = _mergeAndSync3[4];
 	    // oldLastIdealVelocities really
 	
 	    return {
@@ -3015,201 +2568,18 @@ return /******/ (function(modules) { // webpackBootstrap
 	      lastIdealVelocities: lastIdealVelocities,
 	      mergedPropsStyles: mergedPropsStyles
 	    };
-	  },
+	  };
 	
-	  unmounting: false,
-	  animationID: null,
-	  prevTime: 0,
-	  accumulatedTime: 0,
-	  // it's possible that currentStyle's value is stale: if props is immediately
-	  // changed from 0 to 400 to spring(0) again, the async currentStyle is still
-	  // at 0 (didn't have time to tick and interpolate even once). If we naively
-	  // compare currentStyle with destVal it'll be 0 === 0 (no animation, stop).
-	  // In reality currentStyle should be 400
-	  unreadPropStyles: null,
 	  // after checking for unreadPropStyles != null, we manually go set the
 	  // non-interpolating values (those that are a number, without a spring
 	  // config)
-	  clearUnreadPropStyle: function clearUnreadPropStyle(unreadPropStyles) {
-	    var _mergeAndSync2 = mergeAndSync(this.props.willEnter, this.props.willLeave, this.props.didLeave, this.state.mergedPropsStyles, unreadPropStyles, this.state.currentStyles, this.state.currentVelocities, this.state.lastIdealStyles, this.state.lastIdealVelocities);
 	
-	    var mergedPropsStyles = _mergeAndSync2[0];
-	    var currentStyles = _mergeAndSync2[1];
-	    var currentVelocities = _mergeAndSync2[2];
-	    var lastIdealStyles = _mergeAndSync2[3];
-	    var lastIdealVelocities = _mergeAndSync2[4];
-	
-	    for (var i = 0; i < unreadPropStyles.length; i++) {
-	      var unreadPropStyle = unreadPropStyles[i].style;
-	      var dirty = false;
-	
-	      for (var key in unreadPropStyle) {
-	        if (!Object.prototype.hasOwnProperty.call(unreadPropStyle, key)) {
-	          continue;
-	        }
-	
-	        var styleValue = unreadPropStyle[key];
-	        if (typeof styleValue === 'number') {
-	          if (!dirty) {
-	            dirty = true;
-	            currentStyles[i] = _extends({}, currentStyles[i]);
-	            currentVelocities[i] = _extends({}, currentVelocities[i]);
-	            lastIdealStyles[i] = _extends({}, lastIdealStyles[i]);
-	            lastIdealVelocities[i] = _extends({}, lastIdealVelocities[i]);
-	            mergedPropsStyles[i] = {
-	              key: mergedPropsStyles[i].key,
-	              data: mergedPropsStyles[i].data,
-	              style: _extends({}, mergedPropsStyles[i].style)
-	            };
-	          }
-	          currentStyles[i][key] = styleValue;
-	          currentVelocities[i][key] = 0;
-	          lastIdealStyles[i][key] = styleValue;
-	          lastIdealVelocities[i][key] = 0;
-	          mergedPropsStyles[i].style[key] = styleValue;
-	        }
-	      }
-	    }
-	
-	    // unlike the other 2 components, we can't detect staleness and optionally
-	    // opt out of setState here. each style object's data might contain new
-	    // stuff we're not/cannot compare
-	    this.setState({
-	      currentStyles: currentStyles,
-	      currentVelocities: currentVelocities,
-	      mergedPropsStyles: mergedPropsStyles,
-	      lastIdealStyles: lastIdealStyles,
-	      lastIdealVelocities: lastIdealVelocities
-	    });
-	  },
-	
-	  startAnimationIfNecessary: function startAnimationIfNecessary() {
-	    var _this = this;
-	
-	    if (this.unmounting) {
-	      return;
-	    }
-	
-	    // TODO: when config is {a: 10} and dest is {a: 10} do we raf once and
-	    // call cb? No, otherwise accidental parent rerender causes cb trigger
-	    this.animationID = _raf2['default'](function (timestamp) {
-	      // https://github.com/chenglou/react-motion/pull/420
-	      // > if execution passes the conditional if (this.unmounting), then
-	      // executes async defaultRaf and after that component unmounts and after
-	      // that the callback of defaultRaf is called, then setState will be called
-	      // on unmounted component.
-	      if (_this.unmounting) {
-	        return;
-	      }
-	
-	      var propStyles = _this.props.styles;
-	      var destStyles = typeof propStyles === 'function' ? propStyles(rehydrateStyles(_this.state.mergedPropsStyles, _this.unreadPropStyles, _this.state.lastIdealStyles)) : propStyles;
-	
-	      // check if we need to animate in the first place
-	      if (shouldStopAnimationAll(_this.state.currentStyles, destStyles, _this.state.currentVelocities, _this.state.mergedPropsStyles)) {
-	        // no need to cancel animationID here; shouldn't have any in flight
-	        _this.animationID = null;
-	        _this.accumulatedTime = 0;
-	        return;
-	      }
-	
-	      var currentTime = timestamp || _performanceNow2['default']();
-	      var timeDelta = currentTime - _this.prevTime;
-	      _this.prevTime = currentTime;
-	      _this.accumulatedTime = _this.accumulatedTime + timeDelta;
-	      // more than 10 frames? prolly switched browser tab. Restart
-	      if (_this.accumulatedTime > msPerFrame * 10) {
-	        _this.accumulatedTime = 0;
-	      }
-	
-	      if (_this.accumulatedTime === 0) {
-	        // no need to cancel animationID here; shouldn't have any in flight
-	        _this.animationID = null;
-	        _this.startAnimationIfNecessary();
-	        return;
-	      }
-	
-	      var currentFrameCompletion = (_this.accumulatedTime - Math.floor(_this.accumulatedTime / msPerFrame) * msPerFrame) / msPerFrame;
-	      var framesToCatchUp = Math.floor(_this.accumulatedTime / msPerFrame);
-	
-	      var _mergeAndSync3 = mergeAndSync(_this.props.willEnter, _this.props.willLeave, _this.props.didLeave, _this.state.mergedPropsStyles, destStyles, _this.state.currentStyles, _this.state.currentVelocities, _this.state.lastIdealStyles, _this.state.lastIdealVelocities);
-	
-	      var newMergedPropsStyles = _mergeAndSync3[0];
-	      var newCurrentStyles = _mergeAndSync3[1];
-	      var newCurrentVelocities = _mergeAndSync3[2];
-	      var newLastIdealStyles = _mergeAndSync3[3];
-	      var newLastIdealVelocities = _mergeAndSync3[4];
-	
-	      for (var i = 0; i < newMergedPropsStyles.length; i++) {
-	        var newMergedPropsStyle = newMergedPropsStyles[i].style;
-	        var newCurrentStyle = {};
-	        var newCurrentVelocity = {};
-	        var newLastIdealStyle = {};
-	        var newLastIdealVelocity = {};
-	
-	        for (var key in newMergedPropsStyle) {
-	          if (!Object.prototype.hasOwnProperty.call(newMergedPropsStyle, key)) {
-	            continue;
-	          }
-	
-	          var styleValue = newMergedPropsStyle[key];
-	          if (typeof styleValue === 'number') {
-	            newCurrentStyle[key] = styleValue;
-	            newCurrentVelocity[key] = 0;
-	            newLastIdealStyle[key] = styleValue;
-	            newLastIdealVelocity[key] = 0;
-	          } else {
-	            var newLastIdealStyleValue = newLastIdealStyles[i][key];
-	            var newLastIdealVelocityValue = newLastIdealVelocities[i][key];
-	            for (var j = 0; j < framesToCatchUp; j++) {
-	              var _stepper = _stepper4['default'](msPerFrame / 1000, newLastIdealStyleValue, newLastIdealVelocityValue, styleValue.val, styleValue.stiffness, styleValue.damping, styleValue.precision);
-	
-	              newLastIdealStyleValue = _stepper[0];
-	              newLastIdealVelocityValue = _stepper[1];
-	            }
-	
-	            var _stepper2 = _stepper4['default'](msPerFrame / 1000, newLastIdealStyleValue, newLastIdealVelocityValue, styleValue.val, styleValue.stiffness, styleValue.damping, styleValue.precision);
-	
-	            var nextIdealX = _stepper2[0];
-	            var nextIdealV = _stepper2[1];
-	
-	            newCurrentStyle[key] = newLastIdealStyleValue + (nextIdealX - newLastIdealStyleValue) * currentFrameCompletion;
-	            newCurrentVelocity[key] = newLastIdealVelocityValue + (nextIdealV - newLastIdealVelocityValue) * currentFrameCompletion;
-	            newLastIdealStyle[key] = newLastIdealStyleValue;
-	            newLastIdealVelocity[key] = newLastIdealVelocityValue;
-	          }
-	        }
-	
-	        newLastIdealStyles[i] = newLastIdealStyle;
-	        newLastIdealVelocities[i] = newLastIdealVelocity;
-	        newCurrentStyles[i] = newCurrentStyle;
-	        newCurrentVelocities[i] = newCurrentVelocity;
-	      }
-	
-	      _this.animationID = null;
-	      // the amount we're looped over above
-	      _this.accumulatedTime -= framesToCatchUp * msPerFrame;
-	
-	      _this.setState({
-	        currentStyles: newCurrentStyles,
-	        currentVelocities: newCurrentVelocities,
-	        lastIdealStyles: newLastIdealStyles,
-	        lastIdealVelocities: newLastIdealVelocities,
-	        mergedPropsStyles: newMergedPropsStyles
-	      });
-	
-	      _this.unreadPropStyles = null;
-	
-	      _this.startAnimationIfNecessary();
-	    });
-	  },
-	
-	  componentDidMount: function componentDidMount() {
+	  TransitionMotion.prototype.componentDidMount = function componentDidMount() {
 	    this.prevTime = _performanceNow2['default']();
 	    this.startAnimationIfNecessary();
-	  },
+	  };
 	
-	  componentWillReceiveProps: function componentWillReceiveProps(props) {
+	  TransitionMotion.prototype.componentWillReceiveProps = function componentWillReceiveProps(props) {
 	    if (this.unreadPropStyles) {
 	      // previous props haven't had the chance to be set yet; set them here
 	      this.clearUnreadPropStyle(this.unreadPropStyles);
@@ -3226,22 +2596,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this.prevTime = _performanceNow2['default']();
 	      this.startAnimationIfNecessary();
 	    }
-	  },
+	  };
 	
-	  componentWillUnmount: function componentWillUnmount() {
+	  TransitionMotion.prototype.componentWillUnmount = function componentWillUnmount() {
 	    this.unmounting = true;
 	    if (this.animationID != null) {
 	      _raf2['default'].cancel(this.animationID);
 	      this.animationID = null;
 	    }
-	  },
+	  };
 	
-	  render: function render() {
+	  TransitionMotion.prototype.render = function render() {
 	    var hydratedStyles = rehydrateStyles(this.state.mergedPropsStyles, this.unreadPropStyles, this.state.currentStyles);
 	    var renderedChildren = this.props.children(hydratedStyles);
 	    return renderedChildren && _react2['default'].Children.only(renderedChildren);
-	  }
-	});
+	  };
+	
+	  return TransitionMotion;
+	})(_react2['default'].Component);
 	
 	exports['default'] = TransitionMotion;
 	module.exports = exports['default'];
@@ -3257,8 +2629,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	// the array that keeps track of currently rendered stuff! Including stuff
 	// that you've unmounted but that's still animating. This is where it lives
 
+	// it's possible that currentStyle's value is stale: if props is immediately
+	// changed from 0 to 400 to spring(0) again, the async currentStyle is still
+	// at 0 (didn't have time to tick and interpolate even once). If we naively
+	// compare currentStyle with destVal it'll be 0 === 0 (no animation, stop).
+	// In reality currentStyle should be 400
+
 /***/ }),
-/* 24 */
+/* 22 */
 /***/ (function(module, exports) {
 
 	
@@ -3371,7 +2749,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	// to loop through and find a key's index each time), but I no longer care
 
 /***/ }),
-/* 25 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3384,7 +2762,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 	
-	var _presets = __webpack_require__(26);
+	var _presets = __webpack_require__(24);
 	
 	var _presets2 = _interopRequireDefault(_presets);
 	
@@ -3399,7 +2777,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports['default'];
 
 /***/ }),
-/* 26 */
+/* 24 */
 /***/ (function(module, exports) {
 
 	"use strict";
@@ -3414,7 +2792,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = exports["default"];
 
 /***/ }),
-/* 27 */
+/* 25 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';

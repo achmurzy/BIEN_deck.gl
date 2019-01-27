@@ -1,0 +1,21 @@
+.App {
+}
+
+.App-logo-left {
+	position: relative;
+  	height: 80px;
+  	float: left;
+}
+
+.App-logo-right {
+	position: absolute;
+  	height: 80px;
+  	right: 0;
+}
+
+.App-logo-container {
+	width: 100%;
+	position: absolute;
+	vertical-align: bottom;
+	bottom: 0;
+}
