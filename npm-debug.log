@@ -7,8 +7,8 @@
 6 silly lifecycle bien_deck.gl_v2@0.1.0~prestart: no script for prestart, continuing
 7 info lifecycle bien_deck.gl_v2@0.1.0~start: bien_deck.gl_v2@0.1.0
 8 verbose lifecycle bien_deck.gl_v2@0.1.0~start: unsafe-perm in lifecycle true
-9 verbose lifecycle bien_deck.gl_v2@0.1.0~start: PATH: /usr/share/npm/bin/node-gyp-bin:/home/h4ck3rd4wg/Documents/bien_deck.gl_v2/node_modules/.bin:/home/h4ck3rd4wg/perl5/bin:/home/h4ck3rd4wg/.nvm/versions/node/v6.11.4/bin:/home/h4ck3rd4wg/bin:/home/h4ck3rd4wg/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/lib/jvm/java-8-oracle/bin:/usr/lib/jvm/java-8-oracle/db/bin:/usr/lib/jvm/java-8-oracle/jre/bin
-10 verbose lifecycle bien_deck.gl_v2@0.1.0~start: CWD: /home/h4ck3rd4wg/Documents/bien_deck.gl_v2
+9 verbose lifecycle bien_deck.gl_v2@0.1.0~start: PATH: /usr/share/npm/bin/node-gyp-bin:/home/h4ck3rd4wg/Documents/BIEN_deck.gl/node_modules/.bin:/home/h4ck3rd4wg/perl5/bin:/home/h4ck3rd4wg/.nvm/versions/node/v6.11.4/bin:/home/h4ck3rd4wg/bin:/home/h4ck3rd4wg/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/lib/jvm/java-8-oracle/bin:/usr/lib/jvm/java-8-oracle/db/bin:/usr/lib/jvm/java-8-oracle/jre/bin
+10 verbose lifecycle bien_deck.gl_v2@0.1.0~start: CWD: /home/h4ck3rd4wg/Documents/BIEN_deck.gl
 11 silly lifecycle bien_deck.gl_v2@0.1.0~start: Args: [ '-c', 'react-scripts start' ]
 12 info lifecycle bien_deck.gl_v2@0.1.0~start: Failed to exec start script
 13 verbose stack Error: bien_deck.gl_v2@0.1.0 start: `react-scripts start`
@@ -19,7 +19,7 @@
 13 verbose stack     at maybeClose (internal/child_process.js:821:16)
 13 verbose stack     at Process.ChildProcess._handle.onexit (internal/child_process.js:211:5)
 14 verbose pkgid bien_deck.gl_v2@0.1.0
-15 verbose cwd /home/h4ck3rd4wg/Documents/bien_deck.gl_v2
+15 verbose cwd /home/h4ck3rd4wg/Documents/BIEN_deck.gl
 16 error Linux 4.15.0-43-generic
 17 error argv "/usr/bin/nodejs" "/usr/bin/npm" "start"
 18 error node v4.2.6

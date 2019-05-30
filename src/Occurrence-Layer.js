@@ -99,7 +99,6 @@ export default class OccurrenceLayer extends ScatterplotLayer {
 
 	updateState({props})
 	{
-    console.log(this.props.data)
 		super.updateState(...arguments);
 		//this.state.model.setUniforms({ currentTime: props.timeOfDay });
 	}

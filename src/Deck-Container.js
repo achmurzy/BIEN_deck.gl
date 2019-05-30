@@ -7,6 +7,8 @@ import ci from './resources/images/CI.png'
 import nceas from './resources/images/NCEAS.png'
 import cyverse from './resources/images/CyVerse.png'
 
+import richness from './resources/data/richquery.json'
+
 import DeckGLOverlay from './DeckGL-Overlay';
 import {LayerControls, SCATTERPLOT_CONTROLS} from './Layer-Controls';
 import SpeciesDropdown from './SpeciesDropdown';
@@ -31,6 +33,7 @@ export default class DeckContainer extends Component {
       speciesData: [],
       selectedSpecies: 'Mimetanthe pilosa',
       occurrenceData: [],
+      richnessData: richness,
       rangeData: [],
       viewport: 
       {
@@ -65,6 +68,7 @@ export default class DeckContainer extends Component {
   {
     this.fetchOccurrences();
     this.fetchRange();
+    console.log(richness)
     window.addEventListener('resize', this._resize);
     this._resize();
   }
@@ -199,12 +203,13 @@ export default class DeckContainer extends Component {
             viewport={this.state.viewport}
             rangeData={this.state.rangeData}
             occurrenceData={this.state.occurrenceData}
+            richnessData={this.state.richnessData}
             //{...this.state.settings}
           />
           <p className="App-logo-container">
             <a href="http://bien.nceas.ucsb.edu/bien/biendata/bien-4/"><img src={bien} className="App-logo-left" alt="logo"/></a>
-            <a href="https://www.nceas.ucsb.edu/"><img src={nceas} className="App-logo-left" alt="logo"/></a>
-            <a href="https://www.cyverse.org/about"><img src={cyverse} className="App-logo" alt="logo"/></a>
+            {/*<a href="https://www.nceas.ucsb.edu/"><img src={nceas} className="App-logo-left" alt="logo"/></a>*/}
+            {/*<a href="https://www.cyverse.org/about"><img src={cyverse} className="App-logo" alt="logo"/></a>*/}
             {/*<a href="https://www.conservation.org/Pages/default.aspx"><img src={ci} className="App-logo" alt="logo"/></a>*/}
             <a href="https://www.microsoft.com/en-us/ai-for-earth"><img src={azure} className="App-logo-right" alt="logo"/></a>
           </p>

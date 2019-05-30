@@ -4,6 +4,7 @@ import {scaleThreshold} from 'd3-scale';
 
 import RangeLayer from './Range-Layer';
 import OccurrenceLayer from './Occurrence-Layer';
+import RichnessLayer from './Richness-Layer';
 
 const PICKUP_COLOR = [0, 128, 255];
 const DROPOFF_COLOR = [255, 0, 128];
@@ -54,31 +55,60 @@ export default class DeckGLOverlay extends Component {
   }
 
   render() {
-
     const layers = [
         new OccurrenceLayer({
           id: 'occurrence-layer',
           data: this.props.occurrenceData,
+          radiusScale: 1,
+          radiusMinPixels:10,
+          radiusMaxPixels:100,
           getPosition: d => [d.longitude, d.latitude],
-          getColor: d => PICKUP_COLOR,
-          getRadius: d => 10000
+          getColor: d => PICKUP_COLOR
         }),
         new RangeLayer({
         id: 'geojson',
         data: this.props.rangeData,
         opacity: 1.0,
         stroked: true,
-        filled: true,
+        filled: false,
         extruded: true,
-        wireframe: false,
+        wireframe: true,
         fp64: true,
-        getLineColor: [255, 255, 255],
+        getLineColor: [255, 0, 0],
         getFillColor: [255, 0, 0, 255],
         lightSettings: LIGHT_SETTINGS,
         pickable: true
-        })
+        }),
+        new RichnessLayer({
+          id: 'grid-cell-layer',
+          data:this.props.richnessData,
+          extruded: true,
+          coverage: 100,
+          getPosition: d => [d.x, d.y],
+          getColor: d => [0.1*d.mag, 0, 255-(0.1*d.mag), 255],
+          getElevation: d => d.mag,
+          elevationScale: 100,
+          /*id: 'screen-grid',
+          data: this.props.richnessData,
+          pickable: false,
+          opacity: 0.8,
+          cellSizePixels: 50,
+          minColor: [0, 0, 0, 0],
+          maxColor: [180, 0, 0, 255],
+          getPosition: d => [d.y, d.x],
+          getWeight: d => d.mag,
+          onHover: ({object, x, y}) => {
+            const tooltip = 'aggregated cell';
+            /* Update tooltip
+               http://deck.gl/#/documentation/developer-guide/adding-interactivity?section=example-display-a-tooltip-for-hovered-object
+            
+          }*/
+        }),
     ];
-
+    //DeckGL is the base React interface to Deck. the spread operator (...)
+    //Directly instantiates viewport props into this rendering class,
+    //which also accepts our layers. Multiple DeckGL components would
+    //require instantiating other View objects for multiple viewports
     return <DeckGL {...this.props.viewport} 
                     layers={layers}
                     //onWebGLInitialized={this._initialize}
